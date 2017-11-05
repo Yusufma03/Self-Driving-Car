@@ -108,5 +108,5 @@ if __name__=='__main__':
         cars.step()        
 
     traj = cars.ret_traj()
-    with open('future_pos.json', 'w') as fout:
+    with open('../data/future_pos.json', 'w') as fout:
         json.dump(traj, fout)
