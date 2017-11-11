@@ -1,0 +1,5 @@
+#!/bin/bash
+python setup_simulator.py
+cd ../launch/
+roslaunch _active_launchfile.launch
+

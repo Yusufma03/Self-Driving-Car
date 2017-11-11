@@ -1,0 +1,8 @@
+<node name="fake_localization_%d" pkg="fake_localization" type="fake_localization" respawn="false" ns="/robot_%d">
+    <param name="odom_frame_id" value="/robot_%d/odom"/>
+    <param name="base_frame_id" value="/robot_%d/base_link"/>
+</node>
+<group ns="robot_%d">
+    <param name="robot_description" textfile="$(find autocar)/urdf/golfcar_urdf_green.xml" />
+    <param name="tf_prefix" value="robot_%d" />
+</group>

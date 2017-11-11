@@ -1,0 +1,33 @@
+
+<param name="use_sim_time" value="true"/>
+
+<node name="map_server" pkg="map_server" type="map_server" args="$(find autocar)/maps/world/highway.yaml">
+    <param name="frame_id" value="/map" />
+</node>
+
+<node name="stageros" pkg="stage_ros" type="stageros" args="-g $(find autocar)/maps/world/_active_world.world" respawn="false" output="screen">
+    <param name="base_watchdog_timeout" value="0.2"/>
+</node>
+
+<node name="fake_localization_0" pkg="fake_localization" type="fake_localization" respawn="false" ns="/robot_0">
+    <param name="odom_frame_id" value="/robot_0/odom"/>
+    <param name="base_frame_id" value="/robot_0/base_link"/>
+</node>
+
+<group ns="robot_0">
+    <param name="robot_description" textfile="$(find autocar)/urdf/golfcar_urdf_red.xml" />
+    <param name="tf_prefix" value="robot_0" />
+</group>
+
+
+<node pkg="autocar" type="lane_controller.py" name="lane_controller" respawn="false" output="screen">
+    <param name="hz" type="int" value="10" />
+    <param name="path2config" type="str" value="$(find autocar)/scripts/lane_config.json" />
+</node>
+<node pkg="autocar" type="playback_controller.py" name="playback_controller" respawn="false" output="screen">
+    <param name="hz" type="int" value="10" />
+    <param name="path2config" type="str" value="$(find autocar)/scripts/lane_config.json" />
+    <param name="path2playback" type="str" value="$(find autocar)/scripts/cmds.json" />
+</node>
+<node pkg="autocar" type="start_controller.py" name="start_controller" respawn="false" output="screen" />
+<node name="rviz" pkg="rviz" type="rviz" args="-d $(find autocar)/maps/rviz_settings/_active_rviz.rviz"/>
