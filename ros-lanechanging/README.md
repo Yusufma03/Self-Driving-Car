@@ -55,3 +55,12 @@ To test your policy, put your velocity commands in *autocar/scripts/cmds.json*. 
 ```
 
 If the file exists, it will automatically loaded by the simulator.
+
+# Coordinate systems
+
+The middle of the left-most lane has X coordinate 0. Then the middles of other lanes from left to right have coordinates -3, -6, -9, etc.
+The upstream edge of the road has Y coordinate 0.
+
+The dimensions of the car are 2x1, with its origin at the center.
+
+
