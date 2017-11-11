@@ -26,17 +26,18 @@ class PlaybackController:
     def start_simu(self, msg):
         self.simu_started = msg
     
-    def send_control(self, vel):
+    def send_control(self, cmd):
         msg = Twist()
-        msg.linear.x = vel
+        msg.linear.x = cmd[0]
+        msg.linear.y = cmd[1]
         msg.angular.z = 0
         self.pub.publish(msg)
             
     def run(self):
         while not rospy.is_shutdown() and not self.end:
             if self.simu_started:
-                vel = self.cmds[self.t_i][0]
-                self.send_control(vel)
+                cmd = self.cmds[self.t_i]
+                self.send_control(cmd)
                 self.t_i += 1
                 if self.t_i == len(self.cmds):
                     self.end = True

@@ -51,7 +51,7 @@ It will generate *poses.json* in *autocar/scripts/*. Format is same as in Assign
 To test your policy, put your velocity commands in *autocar/scripts/cmds.json*. Format is :
 
 ```
-[ ..., [vel_i, t_i], [vel_i+1, t_i+1], ... ]
+[ ..., [vel_x_i, vel_y_i, t_i], [vel_x_i+1, vel_y_i+1, t_i+1], ... ]
 ```
 
 If the file exists, it will automatically loaded by the simulator.
