@@ -3,12 +3,12 @@ import xml.dom.minidom as minidom
 import numpy as np
 
 NY = 4
-NX = 100
-NCARS = 2
+NX = 50
+NCARS = 3
 DISCOUNT = 0.95
 
 A_CAR_INIT_CELL = (1, 0)
-O_CARS_INIT_CELLS = [(1, 3)]
+O_CARS_INIT_CELLS = [(1, 3),(5, 3)]
 UNCERTAINTIES_PROBAS_X = [0.2, 0.6, 0.2]
 SUBLANES_SPEEDS = [1,1,2,2]
 GOAL_REWARD = 5
@@ -57,14 +57,11 @@ make_state_var("y", 0, NY, fullyobs=True)
 
 for i in range(1, NCARS):
     make_state_var("x", i, NX)
-    make_state_var("y", i, NY)
 
 #### Observation variables ####
 for i in range(1, NCARS):
     obsvar = ET.SubElement(variable, "ObsVar", vname="o_x%d" % i)
     ET.SubElement(obsvar, "NumValues").text = str(NX)
-    obsvar = ET.SubElement(variable, "ObsVar", vname="o_y%d" % i)
-    ET.SubElement(obsvar, "NumValues").text = str(NY)
 
 #### Action variables ####
 actionvar = ET.SubElement(variable, "ActionVar", vname="action")
@@ -104,15 +101,14 @@ make_initial_cond_prob("y", 0, NY, A_CAR_INIT_CELL[1], None)
 
 for i in range(1, NCARS):
     make_initial_cond_prob("x", i, NX, O_CARS_INIT_CELLS[i-1][0], UNCERTAINTIES_PROBAS_X)
-    make_initial_cond_prob("y", i, NY, O_CARS_INIT_CELLS[i-1][1], None)
 
 
 # ------------ StateTransitionFunction ----------------
 
-def make_transition_x_lane(n):
+def make_transition_x_lane_autonoumous():
     condprob = ET.SubElement(statetransitionfunction, "CondProb")
-    ET.SubElement(condprob, "Var").text = "x%d_1" % n
-    ET.SubElement(condprob, "Parent").text = "y%d_0 x%d_0" % (n,n)
+    ET.SubElement(condprob, "Var").text = "x0_1"
+    ET.SubElement(condprob, "Parent").text = "y0_0 x0_0"
     parameter = ET.SubElement(condprob, "Parameter", type="TBL")
 
     for y in range(NY):
@@ -124,6 +120,21 @@ def make_transition_x_lane(n):
         p[-speed:,:] = 0
         p[-speed:,-1] = 1.0
         ET.SubElement(entry, "ProbTable").text = table_to_str(p)
+
+def make_transition_x_lane_others(n):
+    condprob = ET.SubElement(statetransitionfunction, "CondProb")
+    ET.SubElement(condprob, "Var").text = "x%d_1" % n
+    ET.SubElement(condprob, "Parent").text = "x%d_0" % n
+    parameter = ET.SubElement(condprob, "Parameter", type="TBL")
+
+    entry = ET.SubElement(parameter, "Entry")
+    ET.SubElement(entry, "Instance").text = "- -"
+    p = np.identity(NX)
+    speed = SUBLANES_SPEEDS[O_CARS_INIT_CELLS[n-1][1]]
+    p[:-speed, :] = np.roll(p[:-speed, :], speed, axis=1)
+    p[-speed:,:] = 0
+    p[-speed:,-1] = 1.0
+    ET.SubElement(entry, "ProbTable").text = table_to_str(p)
 
 
 statetransitionfunction = ET.SubElement(pomdpx, "StateTransitionFunction")
@@ -155,22 +166,13 @@ p[:-1,:] = np.roll(p[:-1,:], 1, axis=1)
 ET.SubElement(entry, "ProbTable").text = table_to_str(p) 
 
 #### x0_1 ####
-make_transition_x_lane(0)
+make_transition_x_lane_autonoumous()
 
 ### Other cars ###
 for i in range(1, NCARS):
 
-    #### yi_1 ####
-    condprob = ET.SubElement(statetransitionfunction, "CondProb")
-    ET.SubElement(condprob, "Var").text = "y%d_1" % i
-    ET.SubElement(condprob, "Parent").text = "y%d_0" % i
-    parameter = ET.SubElement(condprob, "Parameter", type="TBL")
-    entry = ET.SubElement(parameter, "Entry")
-    ET.SubElement(entry, "Instance").text = "- -"
-    ET.SubElement(entry, "ProbTable").text = "identity"
-
     ### xi_1 ###
-    make_transition_x_lane(i)
+    make_transition_x_lane_others(i)
 
 
 # ------------ ObsFunction ----------------
@@ -212,11 +214,6 @@ for i in range(1, NCARS):
     p = make_obs_x_table()
     p_str = table_to_str(p)
     make_obs_cond_prob("x", i, p_str)
-
-    #### o_yi ####
-    p = np.identity(NY)
-    p_str = table_to_str(p)
-    make_obs_cond_prob("y", i, p_str) 
 
 
 # ------------ RewardFunction ----------------
