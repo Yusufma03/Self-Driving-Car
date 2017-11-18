@@ -325,7 +325,7 @@ class DESPOT(object):
             b.init_bounds()
             self.back_up(b)
         
-        return root
+        return self.root
 
     
 if __name__=="__main__":
