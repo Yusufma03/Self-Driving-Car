@@ -15,6 +15,9 @@ BOUNDARY = -1
 EPSILON = 0.5
 NUM_OF_SCENARIOS = 20
 TIME_LEN = 2
+LEFT_MOST = -4
+RIGHT_MOST = 1
+LAMBDA = 10
 
 
 class AgentCar(object):
@@ -76,9 +79,9 @@ class RobotCar(object):
         '''
         action has three choices: LEFT, STAY, RIGHT
         '''
-        if action is LEFT:
+        if action is LEFT and self.y > LEFT_MOST:
             vel_y = -1
-        elif action is RIGHT:
+        elif action is RIGHT and self.y < RIGHT_MOST:
             vel_y = +1
         else:
             vel_y = 0
@@ -160,15 +163,12 @@ class Scenario(object):
         return ret
 
 class Node(object):
-    def __init__(self, parent=None):
+    def __init__(self, parent, depth, node_id):
         self.parent = parent
+        self.depth = depth
+        self.id = node_id
         self.scenarios = []
         self.children = [dict() for _ in range(3)]
-        if self.parent is None:
-            self.depth = 0
-        else:
-            self.depth = self.parent.depth + 1
-
         self.uppers = None
         self.lowers = None
         self.weu = None
@@ -176,15 +176,18 @@ class Node(object):
     def add_scenario(self, scenario):
         self.scenarios.append(scenario)
 
-    def expand(self):
+    def expand(self, nodes_array):
         for action in range(3):
             for scenario in self.scenarios:
                 new_scenario = scenario.step(action)
                 obs = new_scenario.to_str()
                 if not self.children[action][obs]:
-                    new_node = Node(parent=self)
-                    self.children[action][obs] = new_node
-                self.children[action][obs].add_scenario(new_scenario)
+                    new_node = Node(self.id, self.depth + 1, len(nodes_array)-1)
+                    nodes_array.append(new_node)
+                    self.children[action][obs] = new_node.id
+                cid = self.children[action][obs]
+                nodes_array[cid].add_scenario(new_scenario)
+                # self.children[action][obs].add_scenario(new_scenario)
 
     def init_bounds(self):
         if self.upper_bound is None or self.lower_bound is None:
@@ -209,6 +212,10 @@ class Node(object):
             self.uppers = uppers
             self.lowers = lowers
 
+    def get_average_reward(self, action):
+        rewards = [scenario.get_reward(action) for scenario in self.scenarios]
+        return 1.0/NUM_OF_SCENARIOS * np.sum(rewards) * GAMMA ** self.depth - LAMBDA
+
     def get_upper_action(self):
         return np.argmin(self.uppers)
 
@@ -224,14 +231,15 @@ class Node(object):
                 return False
         return True
 
-    def get_next_node(self):
+    def get_next_node(self, nodes_array):
         weu = None
         action = self.get_upper_action()
         node = None
 
         phi = len(self.scenarios)
 
-        for k, child in self.children[action]:
+        for k, v in self.children[action]:
+            child = nodes_array[v]
             child.init_bounds()
             upper, lower = child.upper_bound(), child.lower_bound()
             phi_prim = len(child.scenarios)
@@ -242,93 +250,112 @@ class Node(object):
             else:
                 if weu_ > weu:
                     weu = weu_
-                    node = child
-        return node, weu
+                    node_id = v
+        return node_id, weu
 
             
+def build_despot(robot_pos, agent_poses):
+    nodes_array = []
+    root = Node(None, 0, 0)
 
-class DESPOT(object):
-    def __init__(self, num_of_cars, num_of_scenarios, search_depth):
-        self.num_of_cars = num_of_cars
-        self.num_of_scenarios = num_of_scenarios
-        self.search_depth = search_depth
-
-    def init_root(self, root):
-        self.root = root
-
-    def trial(self, node):
-        if node.depth > self.search_depth:
-            return node
-        if node.is_leaf():
-            node.expand()
-
-        node.init_bounds()
-        next_node, weu = node.get_next_node()
-        if weu >= 0:
-            return self.trial(next_node)
-        else:
-            return next_node
-
-    def poses2cars(self, poses, rand_num):
-        cars = []
-        for pos in poses:
+    for _ in range(NUM_OF_SCENARIOS):
+        rand_nums = np.random.random(size=SEARCH_DEPTH)
+        scenario = Scenario(SEARCH_DEPTH, rand_nums)
+        robot = RobotCar(robot_pos)
+        agents = []
+        for pos in agent_poses:
             agent = AgentCar(pos)
-            agent.init_pos(rand_num)
-            cars.append(agent)
-        return cars
+            agent.init_pos(rand_nums[0])
+            agents.append(agent)
 
-    def back_up(self, node):
-        lowers = []
-        uppers = []
+        scenario.init_cars(robot, agents)
+        root.add_scenario(scenario)
 
-        for action in range(3):
-            first = (1.0 / len(node.scenarios)) * np.sum([scenario.get_reward(action) for scenario in node.scenarios])
-            second_lower = GAMMA * np.sum(
-                [
-                    (len(next_node.children) / float(len(node.children))) * next_node.lower_bound()
-                    for _, next_node in node.children[action].items()
-                ]
-            )
-            lowers.append(first + second_lower)
-            
-            second_upper = GAMMA * np.sum(
-                [
-                    (len(next_node.children) / float(len(node.children))) *
-                    next_node.upper_bound()
-                    for _, next_node in node.children[action].items()
-                ]
-            )
-            uppers.append(first + second_upper)
+    nodes_array.append(root)
+    start = time.time()
+    while time.time() - start < TIME_LEN:
+        history = []
+        trial_id = trial(0, nodes_array, history)
+        back_up(nodes_array, history)
+    return nodes_array
 
-        lower_ret = np.max(lowers)
-        upper_ret = np.min(uppers)
+def trial(node_id, nodes_array, history):
+    history.append(node_id)
+    node = nodes_array[node_id]
+    if node.depth > SEARCH_DEPTH:
+        return node_id
+    if node.is_leaf():
+        node.expand()
+    node.init_bounds()
+    next_id, weu = node.get_next_node(nodes_array)
+    if weu >= 0:
+        return trial(next_id, nodes_array, history)
+    else:
+        return next_id
 
-        node.lowers = lowers
-        node.uppers = uppers
+def back_up_node(nodes_array, node_id):
+    node = nodes_array[node_id]
+    uppers = []
+    lowers = []
 
-        return lower_ret, upper_ret     
+    for action in range(3):
+        first = (1.0 / len(node.scenarios)) * np.sum([scenario.get_reward(action) for scenario in node.scenarios])
+        second_lower = GAMMA * np.sum(
+            [
+                len(nodes_array[cid].scenarios) / float(len(node.scenarios)) * nodes_array[cid].lower_bound()
+                for _, cid in node.children[action].items()
+            ]
+        )
+        lower = first + second_lower
+        lowers.append(lower)
 
-    def build_despot(self, robot_loc, poses):
-        for _ in range(self.num_of_scenarios):
-            scenario = None
-            rand_nums = np.random.random(size=self.search_depth)
-            rand = rand_nums[0]
-            scenario = Scenario(self.search_depth, rand_nums)
-            robot = RobotCar(robot_loc)
-            agents = self.poses2cars(poses, rand)
-            scenario.init_cars(robot, agents)
-            self.root.add_scenario(scenario)
-
-        start = time.time()
-        while time.time() - start < TIME_LEN:
-            b = self.trial(self.root)
-            b.init_bounds()
-            self.back_up(b)
-        
-        return self.root
-
+        second_higher = GAMMA * np.sum(
+            [
+                len(nodes_array[cid].scenarios) /
+                float(len(node.scenarios)) * nodes_array[cid].upper_bound()
+                for _, cid in node.children[action].items()
+            ]
+        )
+        upper = first + second_higher
+        uppers.append(upper)
     
-if __name__=="__main__":
-    with open("./poses.json", 'r') as fin:
-        parsed = json.load(fin)
-    import pdb; pdb.set_trace()
+    node.lowers = lowers
+    node.uppers = uppers
+
+def back_up(nodes_array, history):
+    for node_id in history[::-1]:
+        back_up_node(nodes_array, node_id)
+
+def planning(nodes_array):
+    root = nodes_array[0]
+    q_values = []
+    for action in range(3):
+        reward = root.get_average_reward(action)
+        value = np.sum([
+            regularized_value(child, nodes_array)
+            for _, child in root.children[action]
+        ])
+        q_values.append(reward + value)
+
+    return np.argmax(q_values)
+
+def regularized_value(node_id, nodes_array):
+    '''
+    assume the default policy is staying in the current lane, hence default value is 0
+    '''
+    node = nodes_array[node_id]
+    v1 = -LAMBDA
+    if node.is_leaf():
+        return v1
+    
+    v2s = []
+    for action in range(3):
+        v2_t = node.get_average_reward(action)
+        v2_t += np.sum([
+            regularized_value(child, nodes_array)
+            for _, child in node.children[action]
+        ])
+        v2s.append(v2_t)
+
+    v2 = np.max(v2s)
+    return max(v1, v2)
