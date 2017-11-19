@@ -1,6 +1,6 @@
 from utils import *
 
-def build_despot(robot_pos, agent_poses):
+def build_despot(robot_pos, agent_belief):
     nodes_array = []
     root = Node(None, 0, 0)
 
@@ -9,8 +9,8 @@ def build_despot(robot_pos, agent_poses):
         scenario = Scenario(SEARCH_DEPTH, rand_nums)
         robot = RobotCar(robot_pos)
         agents = []
-        for pos in agent_poses:
-            agent = AgentCar(pos)
+        for belief in agent_belief:
+            agent = AgentCar(belief)
             agent.init_pos(rand_nums[0])
             agents.append(agent)
 

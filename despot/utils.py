@@ -10,14 +10,15 @@ CARS = 5
 LEFT = 0
 STAY = 1
 RIGHT = 2
-GOAL = 400
+GOAL = 210
 BOUNDARY = -1
 EPSILON = 0.5
 NUM_OF_SCENARIOS = 20
-TIME_LEN = 2
+TIME_LEN = 1
 LEFT_MOST = -4
 RIGHT_MOST = 1
 LAMBDA = 10
+ROAD_LEN = 210
 
 
 class AgentCar(object):
@@ -26,20 +27,25 @@ class AgentCar(object):
     consider the movement every 0.1 second
     '''
 
-    def __init__(self, obs):
-        self.obs = obs
+    def __init__(self, belief):
+        self.belief = belief
         self.bias = np.random.random()
 
     def init_pos(self, rand_num):
         rand = (self.bias + rand_num) / 2
-        x, y = self.obs
-        self.y = y
-        if rand < 0.1:
-            self.x = x - 2
-        elif 0.1 <= rand < 0.9:
-            self.x = x
-        else:
-            self.x = x + 2
+        x_belief, y = self.belief
+        x = self.belief_choice(x_belief, rand)
+        self.x, self.y = x, y
+
+    
+    def belief_choice(self, belief, rand_num):
+        s = 0
+        for i in range(len(belief)):
+            s_new = s + belief[i]
+            if s <= rand_num < s_new:
+                return i
+            s = s_new
+        return -1
 
     def step(self, rand_num):
         rand = (self.bias + rand_num) / 2
@@ -49,7 +55,8 @@ class AgentCar(object):
             vel_x = 2
         new_x, new_y = self.x + vel_x, self.y
 
-        new_car = AgentCar([new_x, new_y])
+        new_car = deepcopy(self)
+        new_car.obs = [new_x, new_y]
         new_car.init_pos(rand_num)
         return new_car
 
@@ -79,9 +86,9 @@ class RobotCar(object):
         '''
         action has three choices: LEFT, STAY, RIGHT
         '''
-        if action is LEFT and self.y > LEFT_MOST:
+        if action == LEFT and self.y > LEFT_MOST:
             vel_y = -1
-        elif action is RIGHT and self.y < RIGHT_MOST:
+        elif action == RIGHT and self.y < RIGHT_MOST:
             vel_y = +1
         else:
             vel_y = 0
