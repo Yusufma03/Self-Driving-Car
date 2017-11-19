@@ -8,3 +8,5 @@ localization "gps"
 velocity_bounds [-10000 10000 -10000 10000 -10000 10000 -90 90 ]	
 acceleration_bounds [-10000 10000 -10000 10000 -10000 10000 -90 90]
 )
+
+speedup 0.2
