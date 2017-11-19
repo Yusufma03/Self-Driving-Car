@@ -32,7 +32,7 @@ def trial(node_id, nodes_array, history):
     if node.depth > SEARCH_DEPTH:
         return node_id
     if node.is_leaf():
-        node.expand()
+        node.expand(nodes_array)
     node.init_bounds()
     next_id, weu = node.get_next_node(nodes_array)
     if weu >= 0:
@@ -75,6 +75,8 @@ def back_up_node(nodes_array, node_id):
 
 
 def back_up(nodes_array, history):
+    for node in nodes_array:
+        node.init_bounds()
     for node_id in history[::-1]:
         back_up_node(nodes_array, node_id)
 
@@ -86,7 +88,7 @@ def planning(nodes_array):
         reward = root.get_average_reward(action)
         value = np.sum([
             regularized_value(child, nodes_array)
-            for _, child in root.children[action]
+            for _, child in root.children[action].items()
         ])
         q_values.append(reward + value)
 
@@ -107,7 +109,7 @@ def regularized_value(node_id, nodes_array):
         v2_t = node.get_average_reward(action)
         v2_t += np.sum([
             regularized_value(child, nodes_array)
-            for _, child in node.children[action]
+            for _, child in node.children[action].items()
         ])
         v2s.append(v2_t)
 

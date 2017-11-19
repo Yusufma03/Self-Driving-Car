@@ -181,7 +181,7 @@ class Node(object):
             for scenario in self.scenarios:
                 new_scenario = scenario.step(action)
                 obs = new_scenario.to_str()
-                if not self.children[action][obs]:
+                if not obs in self.children[action]:
                     new_node = Node(self.id, self.depth + 1, len(nodes_array)-1)
                     nodes_array.append(new_node)
                     self.children[action][obs] = new_node.id
@@ -190,7 +190,7 @@ class Node(object):
                 # self.children[action][obs].add_scenario(new_scenario)
 
     def init_bounds(self):
-        if self.upper_bound is None or self.lower_bound is None:
+        if self.uppers is None or self.lowers is None:
             uppers = []
             lowers = []
 
@@ -238,7 +238,7 @@ class Node(object):
 
         phi = len(self.scenarios)
 
-        for k, v in self.children[action]:
+        for k, v in self.children[action].items():
             child = nodes_array[v]
             child.init_bounds()
             upper, lower = child.upper_bound(), child.lower_bound()
@@ -247,6 +247,7 @@ class Node(object):
             weu_ = phi_prim / float(phi) * excess
             if weu is None:
                 weu = weu_
+                node_id = v
             else:
                 if weu_ > weu:
                     weu = weu_
