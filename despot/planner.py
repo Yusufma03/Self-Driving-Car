@@ -17,3 +17,5 @@ if __name__=='__main__':
     agent_poses = get_agent_poses(data, 0)
     robot_pos = [120, 0]
     out = build_despot(robot_pos, agent_poses)
+    action = planning(out)
+    print(action)

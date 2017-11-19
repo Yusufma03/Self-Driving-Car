@@ -182,7 +182,7 @@ class Node(object):
                 new_scenario = scenario.step(action)
                 obs = new_scenario.to_str()
                 if not obs in self.children[action]:
-                    new_node = Node(self.id, self.depth + 1, len(nodes_array)-1)
+                    new_node = Node(self.id, self.depth + 1, len(nodes_array))
                     nodes_array.append(new_node)
                     self.children[action][obs] = new_node.id
                 cid = self.children[action][obs]
