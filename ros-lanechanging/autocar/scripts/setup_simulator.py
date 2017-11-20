@@ -1,15 +1,11 @@
 import json
 import sys
 
-LANE_OFFSET_Y = 3.0
-FIRST_LANE_Y = 0
-
 with open('lane_config.json', 'r') as f:
     config = json.load(f)
 
 
-y_lane = FIRST_LANE_Y
-
+y_lane = 0
 
 poses = [(config["autonomous_car_start_pos"], y_lane)]
 count = 1
@@ -22,7 +18,7 @@ for i in range(config["num_lanes"]):
         poses.append(pos)
         count += 1
 
-    y_lane -= LANE_OFFSET_Y
+    y_lane -= config["lane_width"]
 
 print("1 autonomous car + %d other cars." % (count-1))
 

@@ -7,17 +7,16 @@ def update_vel(i, config):
     stdrr_vel = config["stdrr_speed_per_lane"][i]
     return np.random.normal(mean_vel, stdrr_vel)
 
-DT = 0.1
-LANE_OFFSET_Y = 3.0
-FIRST_LANE_Y = 0
 
 with open('lane_config.json', 'r') as f:
     config = json.load(f)
 
+DT = config["dt"]
+
 nb_steps = config["nb_timesteps"]
 np.random.seed(config["random_seed"])
 
-y_lane = FIRST_LANE_Y
+y_lane = 0
 poses = {}
 lane_ids = {}
 
@@ -31,7 +30,7 @@ for i in range(config["num_lanes"]):
         lane_ids[key] = i
         count += 1
 
-    y_lane -= LANE_OFFSET_Y
+    y_lane -= config["lane_width"]
 
 for t_i in range(0,nb_steps-1):
 
