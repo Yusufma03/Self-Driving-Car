@@ -70,9 +70,9 @@ def action2vel(action, robot_pos):
 if __name__=='__main__':
     data = load_data()
     index = 0
-    robot_pos = [102, 0]
+    robot_pos = [28, 0]
     dump = []
-    while robot_pos[0] < 200:
+    while robot_pos[0] < 150:
         agent_poses = get_agent_poses(data, index)
         if index == 0:
             agent_belief = to_belief(agent_poses)
@@ -87,6 +87,6 @@ if __name__=='__main__':
         print(robot_pos)
         dump.append([vel_x*10, vel_y*10, index / 10.0])
         index += 1
-
-    with open('command.json', 'w') as fout:
+    
+    with open('cmds.json', 'w') as fout:
         json.dump(dump, fout)

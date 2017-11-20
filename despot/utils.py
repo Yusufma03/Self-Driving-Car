@@ -4,13 +4,13 @@ import json
 from copy import deepcopy
 import time
 
-SEARCH_DEPTH = 10
+SEARCH_DEPTH = 5
 GAMMA = 0.9
 CARS = 5
 LEFT = 0
 STAY = 1
 RIGHT = 2
-GOAL = 210
+GOAL = 160
 BOUNDARY = -1
 EPSILON = 0.5
 NUM_OF_SCENARIOS = 20
@@ -18,7 +18,7 @@ TIME_LEN = 1
 LEFT_MOST = -4
 RIGHT_MOST = 1
 LAMBDA = 10
-ROAD_LEN = 210
+ROAD_LEN = 160
 
 
 class AgentCar(object):
@@ -196,28 +196,47 @@ class Node(object):
                 nodes_array[cid].add_scenario(new_scenario)
                 # self.children[action][obs].add_scenario(new_scenario)
 
+    # def init_bounds(self):
+    #     if self.uppers is None or self.lowers is None:
+    #         uppers = []
+    #         lowers = []
+
+    #         for action in range(3):
+    #             action_upper = None
+    #             action_lower = None
+    #             for scenario in self.scenarios:
+    #                 reward = scenario.get_reward(action)
+    #                 if action_upper is None or action_lower is None:
+    #                     action_upper, action_lower = reward, reward
+    #                 else:
+    #                     if action_upper < reward:
+    #                         action_upper = reward
+    #                     if action_lower >= reward:
+    #                         action_lower = reward
+    #             uppers.append(action_upper)
+    #             lowers.append(action_lower)
+
+    #         self.uppers = uppers
+    #         self.lowers = lowers
+
     def init_bounds(self):
         if self.uppers is None or self.lowers is None:
-            uppers = []
             lowers = []
-
+            uppers = []
             for action in range(3):
-                action_upper = None
-                action_lower = None
-                for scenario in self.scenarios:
-                    reward = scenario.get_reward(action)
-                    if action_upper is None or action_lower is None:
-                        action_upper, action_lower = reward, reward
-                    else:
-                        if action_upper < reward:
-                            action_upper = reward
-                        if action_lower >= reward:
-                            action_lower = reward
-                uppers.append(action_upper)
-                lowers.append(action_lower)
+                if action == LEFT:
+                    uppers.append(50)
+                    lowers.append(-100)
+                elif action == STAY:
+                    uppers.append(50)
+                    lowers.append(-0.2)
+                else:
+                    uppers.append(50)
+                    lowers.append(-100)
 
             self.uppers = uppers
             self.lowers = lowers
+
 
     def get_average_reward(self, action):
         rewards = [scenario.get_reward(action) for scenario in self.scenarios]

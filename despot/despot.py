@@ -5,7 +5,7 @@ def build_despot(robot_pos, agent_belief):
     root = Node(None, 0, 0)
 
     for _ in range(NUM_OF_SCENARIOS):
-        rand_nums = np.random.random(size=SEARCH_DEPTH)
+        rand_nums = np.random.random(size=SEARCH_DEPTH+1)
         scenario = Scenario(SEARCH_DEPTH, rand_nums)
         robot = RobotCar(robot_pos)
         agents = []
