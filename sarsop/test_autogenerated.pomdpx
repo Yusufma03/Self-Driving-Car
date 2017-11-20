@@ -14,7 +14,10 @@
 		<ActionVar vname="action">
 			<ValueEnum>none left right</ValueEnum>
 		</ActionVar>
-		<RewardVar vname="rew_action"/>
+		<RewardVar vname="rew_obj"/>
+		<RewardVar vname="rew_out"/>
+		<RewardVar vname="rew_lane"/>
+		<RewardVar vname="rew_collision1"/>
 	</Variable>
 	<InitialStateBelief>
 		<CondProb>
@@ -94,20 +97,42 @@
 	</ObsFunction>
 	<RewardFunction>
 		<Func>
-			<Var>rew_action</Var>
+			<Var>rew_obj</Var>
+			<Parent>y0_1</Parent>
+			<Parameter type="TBL">
+				<Entry>
+					<Instance>-</Instance>
+					<ValueTable>0 0 0 1</ValueTable>
+				</Entry>
+			</Parameter>
+		</Func>
+		<Func>
+			<Var>rew_lane</Var>
+			<Parent>action</Parent>
+			<Parameter type="TBL">
+				<Entry>
+					<Instance>-</Instance>
+					<ValueTable>0 -1 -1</ValueTable>
+				</Entry>
+			</Parameter>
+		</Func>
+		<Func>
+			<Var>rew_out</Var>
 			<Parent>action y0_1</Parent>
 			<Parameter type="TBL">
 				<Entry>
-					<Instance>none -</Instance>
-					<ValueTable>0 0 0 0</ValueTable>
+					<Instance>- -</Instance>
+					<ValueTable>0 0 0 0 -10 0 0 0 0 0 0 -10</ValueTable>
 				</Entry>
+			</Parameter>
+		</Func>
+		<Func>
+			<Var>rew_collision1</Var>
+			<Parent>y0_1 dx1_1</Parent>
+			<Parameter type="TBL">
 				<Entry>
-					<Instance>left -</Instance>
-					<ValueTable>-10 -1 -1 -1</ValueTable>
-				</Entry>
-				<Entry>
-					<Instance>right -</Instance>
-					<ValueTable>1 1 1 -10</ValueTable>
+					<Instance>- -</Instance>
+					<ValueTable>0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1000 0</ValueTable>
 				</Entry>
 			</Parameter>
 		</Func>

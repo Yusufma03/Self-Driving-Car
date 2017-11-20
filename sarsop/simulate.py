@@ -122,15 +122,22 @@ class Simulation:
 
             x_car = self.poses["robot_%d" % car][self.t_i][0]
             dx = x_car - self.x0
-            dx_i = int(round(dx / CELL_SIZE_X))
+
+            dx_discretized = int(round(dx / CELL_SIZE_X))
+            if dx_discretized >= 1:
+                dx_i  = NDX-1
+            elif dx_discretized <= -(NDX-2):
+                dx_i = 0
+            else:
+                dx_i = dx_discretized + NDX-2
+
+            print("True dx_i :", dx_i)
 
             probas = make_dx_obs_matrix()
-            probas_car = probas[car-1,:]
+            probas_car = probas[dx_i,:]
             o_dx[car-1] = np.random.choice(np.arange(NDX), p=probas_car)
 
         return o_dx
-
-
 
 vectors,actions_vectors = parse_policy(sys.argv[1])
 
@@ -139,16 +146,22 @@ simulation = Simulation("poses.json", "lane_config.json")
 # Initial belief
 b_y0 = np.zeros(NY)
 b_y0[0] = 1.0
-b_dx = np.ones((NCARS-1, NDX)) * 0.5
+b_dx = np.ones((NCARS-1, NDX)) / NDX
 belief = b_y0,b_dx
 
 #for i in range(NB_TIMESTEPS):
-for i in range(5):
+for i in range(10):
 
+    print("Iter %d ----------" % i)
+    print("Initial belief :",belief[0],belief[1])
     action = get_optimal_action(belief, vectors, actions_vectors)
+    print("Action :",action)
     simulation.step(action)
     belief = action_update(belief, action)
+    print("After action update :",belief[0],belief[1])
     obs = simulation.observe()
+    print("Observation :",obs)
     belief = observation_update(belief, obs)
+    print("After observation update :",belief[0],belief[1])
 
-    print(action)
+    print("\n")

@@ -3,19 +3,19 @@ import xml.dom.minidom as minidom
 import numpy as np
 import sys
 from utils import *
+import json
+
+lane_config = json.load(open('lane_config.json', 'r'))
 
 NY = 4
 NDX = 5
 NCARS = 2
 CARS_LANES = [0, 3]
 DISCOUNT = 0.95
-UNCERTAINTIES_PROBAS_X = [0.2, 0.6, 0.2]
-SUBLANES_SPEEDS = [1,1,2,2]
 COLLISION_REWARD = -1000
-LEFT_REWARD = -1
-RIGHT_REWARD = 1
+OBJECTIVE_REWARD = 1
+LANE_CHANGE_REWARD = -1
 OUT_OF_LANE_REWARD = -10
-
 
 pomdpx = ET.Element("pomdpx")
 
@@ -51,7 +51,11 @@ valueenum = ET.SubElement(actionvar, "ValueEnum")
 valueenum.text = "none left right"
 
 #### Reward variables ####
-rewardvar = ET.SubElement(variable, "RewardVar", vname="rew_action")
+rewardvar = ET.SubElement(variable, "RewardVar", vname="rew_obj")
+rewardvar = ET.SubElement(variable, "RewardVar", vname="rew_out")
+rewardvar = ET.SubElement(variable, "RewardVar", vname="rew_lane")
+for i in range(1,NCARS):
+    rewardvar = ET.SubElement(variable, "RewardVar", vname="rew_collision%d" % i)
 
 
 # ------------ InitialStateBelief ----------------
@@ -121,8 +125,6 @@ ET.SubElement(entry, "ProbTable").text = table_to_str(p)
 
 
 #### dxi_1 ####
-
-
 for i in range(1, NCARS):
     make_transition_x_lane_others(i) 
 
@@ -154,27 +156,40 @@ for i in range(1, NCARS):
 
 rewardfunction = ET.SubElement(pomdpx, "RewardFunction")
 
-func = ET.SubElement(rewardfunction, "Func")
-ET.SubElement(func, "Var").text = "rew_action"
-ET.SubElement(func, "Parent").text = "action y0_1"
-parameter = ET.SubElement(func, "Parameter", type="TBL")
+def make_reward(name, parents, v_str):
 
-entry = ET.SubElement(parameter, "Entry")
-ET.SubElement(entry, "Instance").text = "none -"
+    func = ET.SubElement(rewardfunction, "Func")
+    ET.SubElement(func, "Var").text = name
+    ET.SubElement(func, "Parent").text = " ".join(parents)
+    parameter = ET.SubElement(func, "Parameter", type="TBL")
+
+    entry = ET.SubElement(parameter, "Entry")
+    ET.SubElement(entry, "Instance").text = " ".join("-" for i in range(len(parents)))
+    ET.SubElement(entry, "ValueTable").text = v_str
+
+
+# Objective reward
 v = np.zeros(NY, np.int32)
-ET.SubElement(entry, "ValueTable").text = table_to_str(v, mode='int')
+v[-1] = OBJECTIVE_REWARD
+make_reward("rew_obj", ["y0_1"], table_to_str(v, mode='int'))
 
-entry = ET.SubElement(parameter, "Entry")
-ET.SubElement(entry, "Instance").text = "left -"
-v = np.ones(NY, np.int32) * LEFT_REWARD
-v[0] = OUT_OF_LANE_REWARD
-ET.SubElement(entry, "ValueTable").text = table_to_str(v, mode='int')
+# Lane change reward
+v = np.zeros(3, np.int32)
+v[1:] = LANE_CHANGE_REWARD
+make_reward("rew_lane", ["action"], table_to_str(v, mode='int'))
 
-entry = ET.SubElement(parameter, "Entry")
-ET.SubElement(entry, "Instance").text = "right -"
-v = np.ones(NY, np.int32) * RIGHT_REWARD
-v[-1] = OUT_OF_LANE_REWARD
-ET.SubElement(entry, "ValueTable").text = table_to_str(v, mode='int')
+# Out of lane reward
+v = np.zeros((3,NY), np.int32)
+v[1,0] = OUT_OF_LANE_REWARD
+v[2,-1] = OUT_OF_LANE_REWARD
+make_reward("rew_out", ["action", "y0_1"], table_to_str(v, mode='int'))
+
+# Collision reward
+for i in range(1, NCARS):
+    v = np.zeros((NY,NDX), np.int32)
+    lane = CARS_LANES[i]
+    v[lane, -2] = COLLISION_REWARD
+    make_reward("rew_collision%d" % i, ["y0_1", "dx%d_1" % i], table_to_str(v, mode='int'))
 
 # ------------ Save file ----------------
 

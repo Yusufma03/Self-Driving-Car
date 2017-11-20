@@ -7,10 +7,6 @@ CARS_LANES = [0, 3]
 DISCOUNT = 0.95
 UNCERTAINTIES_PROBAS_X = [0.2, 0.6, 0.2]
 SUBLANES_SPEEDS = [1,1,2,2]
-COLLISION_REWARD = -1000
-LEFT_REWARD = -1
-RIGHT_REWARD = 1
-OUT_OF_LANE_REWARD = -10
 
 
 def table_to_str(table, mode='float'):
@@ -85,3 +81,5 @@ def make_dx_obs_matrix():
         p[i,:] = squeezed
 
     return p
+
+
