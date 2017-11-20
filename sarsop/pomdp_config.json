@@ -1,0 +1,14 @@
+{
+    "num_sublanes_per_lane":3,
+    "num_cells_obs":5,
+    "discount":0.95,
+    "obs_probas":[0.2, 0.6, 0.2],
+    "cell_length":2.0,
+    "rewards":
+    {
+        "collision":-1000,
+        "objective":10,
+        "lane_change":-1,
+        "out_of_lane":-10
+    }
+}
