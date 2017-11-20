@@ -5,7 +5,7 @@
     <param name="frame_id" value="/map" />
 </node>
 
-<node name="stageros" pkg="stage_ros" type="stageros" args="-g $(find autocar)/maps/world/_active_world.world" respawn="false" output="screen">
+<node name="stageros" pkg="stage_ros" type="stageros" args="$(find autocar)/maps/world/_active_world.world" respawn="false" output="screen">
     <param name="base_watchdog_timeout" value="0.2"/>
 </node>
 
