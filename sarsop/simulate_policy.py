@@ -3,20 +3,18 @@ import sys
 import json
 import numpy as np
 from utils import *
+from config_utils import load_configs
+from simulation import Simulation
 
-NY = 4
-NDX = 5
-NCARS = 2
-NB_TIMESTEPS = 300
-LANE_OFFSET_Y = 3.0
-FIRST_LANE_Y = 0
-CELL_SIZE_X = 2.0
+config = load_configs()
 
-DT = 0.1
+NY = config["ny"]
+NDX = config["ndx"]
+NCARS = config["ncars"]
+NB_TIMESTEPS = config["nb_timesteps"]
+SUBLANE_WIDTH = config["sublane_width"]
+DT = config["dt"]
 
-def get_sublanes_speeds():
-    # TODO
-    return [20, 20, 40, 40]
 
 def parse_policy(path):
 
@@ -76,7 +74,6 @@ def observation_update(belief, obs):
 
     b_y0_1 = b_y0_0
 
-    # obs : (NCARS-1)
     b_dx_1 = np.zeros((NCARS-1, NDX))
     for car in range(1,NCARS):
         obs_mat = make_dx_obs_matrix()
@@ -86,61 +83,8 @@ def observation_update(belief, obs):
     return b_y0_1,b_dx_1
 
 
-class Simulation:
-
-    def __init__(self, poses_path, config_path):
-        self.poses = json.load(open(poses_path, 'r'))
-        self.config = json.load(open(config_path, 'r'))
-        self.x0 = self.config["autonomous_car_start_pos"]
-        self.y0 = FIRST_LANE_Y
-        self.t_i = 0
-        self.sublanes_speeds = get_sublanes_speeds()
-    
-    def step(self, action):
-
-        self.t_i += 1
-
-        def get_vel(y0):
-            lane = int(round((self.y0 - FIRST_LANE_Y)/LANE_OFFSET_Y))
-            vel = self.sublanes_speeds[lane]
-            return vel
-
-        v = get_vel(self.y0)
-        self.x0 += v * DT
-
-        if action == "left":
-            self.y0 = max(0, self.y0-LANE_OFFSET_Y)
-        elif action == "right":
-            self.y0 = min((NY-1)*LANE_OFFSET_Y, self.y0+LANE_OFFSET_Y)
-
-
-    def observe(self):
-
-        o_dx = np.zeros(NCARS-1, np.int32)
-
-        for car in range(1,NCARS):
-
-            x_car = self.poses["robot_%d" % car][self.t_i][0]
-            dx = x_car - self.x0
-
-            dx_discretized = int(round(dx / CELL_SIZE_X))
-            if dx_discretized >= 1:
-                dx_i  = NDX-1
-            elif dx_discretized <= -(NDX-2):
-                dx_i = 0
-            else:
-                dx_i = dx_discretized + NDX-2
-
-            print("True dx_i :", dx_i)
-
-            probas = make_dx_obs_matrix()
-            probas_car = probas[dx_i,:]
-            o_dx[car-1] = np.random.choice(np.arange(NDX), p=probas_car)
-
-        return o_dx
 
 vectors,actions_vectors = parse_policy(sys.argv[1])
-
 simulation = Simulation("poses.json", "lane_config.json")
 
 # Initial belief
@@ -149,8 +93,7 @@ b_y0[0] = 1.0
 b_dx = np.ones((NCARS-1, NDX)) / NDX
 belief = b_y0,b_dx
 
-#for i in range(NB_TIMESTEPS):
-for i in range(10):
+for i in range(NB_TIMESTEPS-1):
 
     print("Iter %d ----------" % i)
     print("Initial belief :",belief[0],belief[1])
@@ -165,3 +108,6 @@ for i in range(10):
     print("After observation update :",belief[0],belief[1])
 
     print("\n")
+
+simulation.step('none')
+simulation.write_commands()

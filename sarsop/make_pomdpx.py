@@ -3,19 +3,17 @@ import xml.dom.minidom as minidom
 import numpy as np
 import sys
 from utils import *
-import json
+from config_utils import load_configs
 
-lane_config = json.load(open('lane_config.json', 'r'))
+config = load_configs()
 
-NY = 4
-NDX = 5
-NCARS = 2
-CARS_LANES = [0, 3]
-DISCOUNT = 0.95
-COLLISION_REWARD = -1000
-OBJECTIVE_REWARD = 1
-LANE_CHANGE_REWARD = -1
-OUT_OF_LANE_REWARD = -10
+NY = config["ny"]
+NDX = config["ndx"]
+NCARS = config["ncars"]
+CARS_SUBLANES = config["cars_sublanes"]
+DISCOUNT = config["discount"]
+REWARDS = config["rewards"]
+
 
 pomdpx = ET.Element("pomdpx")
 
@@ -93,7 +91,6 @@ def make_transition_x_lane_others(n):
         entry = ET.SubElement(parameter, "Entry")
         ET.SubElement(entry, "Instance").text = "s%d - -" % i
         p = make_dx_transition_matrix(i, n)
-        print(p)
         ET.SubElement(entry, "ProbTable").text = table_to_str(p)
 
 
@@ -170,25 +167,25 @@ def make_reward(name, parents, v_str):
 
 # Objective reward
 v = np.zeros(NY, np.int32)
-v[-1] = OBJECTIVE_REWARD
+v[-1] = REWARDS["objective"]
 make_reward("rew_obj", ["y0_1"], table_to_str(v, mode='int'))
 
 # Lane change reward
 v = np.zeros(3, np.int32)
-v[1:] = LANE_CHANGE_REWARD
+v[1:] = REWARDS["lane_change"]
 make_reward("rew_lane", ["action"], table_to_str(v, mode='int'))
 
 # Out of lane reward
 v = np.zeros((3,NY), np.int32)
-v[1,0] = OUT_OF_LANE_REWARD
-v[2,-1] = OUT_OF_LANE_REWARD
+v[1,0] = REWARDS["out_of_lane"]
+v[2,-1] = REWARDS["out_of_lane"]
 make_reward("rew_out", ["action", "y0_1"], table_to_str(v, mode='int'))
 
 # Collision reward
 for i in range(1, NCARS):
     v = np.zeros((NY,NDX), np.int32)
-    lane = CARS_LANES[i]
-    v[lane, -2] = COLLISION_REWARD
+    lane = CARS_SUBLANES[i]
+    v[lane, -2] = REWARDS["collision"]
     make_reward("rew_collision%d" % i, ["y0_1", "dx%d_1" % i], table_to_str(v, mode='int'))
 
 # ------------ Save file ----------------

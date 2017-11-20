@@ -102,7 +102,7 @@
 			<Parameter type="TBL">
 				<Entry>
 					<Instance>-</Instance>
-					<ValueTable>0 0 0 1</ValueTable>
+					<ValueTable>0 0 0 10</ValueTable>
 				</Entry>
 			</Parameter>
 		</Func>

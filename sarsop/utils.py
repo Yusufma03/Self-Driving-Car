@@ -1,12 +1,14 @@
 import numpy as np
+from config_utils import load_configs
 
-NY = 4
-NDX = 5
-NCARS = 2
-CARS_LANES = [0, 3]
-DISCOUNT = 0.95
-UNCERTAINTIES_PROBAS_X = [0.2, 0.6, 0.2]
-SUBLANES_SPEEDS = [1,1,2,2]
+config = load_configs()
+
+NY = config["ny"]
+NDX = config["ndx"]
+NCARS = config["ncars"]
+CARS_SUBLANES = config["cars_sublanes"]
+OBS_PROBAS = config["obs_probas"]
+SUBLANES_SPEEDS_CELLS = config["sublanes_speeds_cells"]
 
 
 def table_to_str(table, mode='float'):
@@ -44,7 +46,7 @@ def make_dx_transition_matrix(y0, car):
     assert y0 >= 0 and y0 < NY
     assert car >= 1 and car < NCARS
 
-    speed = SUBLANES_SPEEDS[CARS_LANES[car]] - SUBLANES_SPEEDS[y0]
+    speed = SUBLANES_SPEEDS_CELLS[CARS_SUBLANES[car]] - SUBLANES_SPEEDS_CELLS[y0]
 
     p = np.identity(NDX)
 
@@ -66,12 +68,12 @@ def make_dx_transition_matrix(y0, car):
 
 def make_dx_obs_matrix():
     p = np.zeros((NDX,NDX))
-    l = len(UNCERTAINTIES_PROBAS_X)
-    half_l = int(len(UNCERTAINTIES_PROBAS_X)/2)
+    l = len(OBS_PROBAS)
+    half_l = int(len(OBS_PROBAS)/2)
 
     for i in range(p.shape[0]):
         expanded = np.zeros(NDX + 2*half_l)
-        expanded[i:i+l] = UNCERTAINTIES_PROBAS_X
+        expanded[i:i+l] = OBS_PROBAS
         squeezed = expanded[half_l:half_l+NDX]
         front_cut = expanded[:half_l]
         back_cut = expanded[half_l+NDX:]
