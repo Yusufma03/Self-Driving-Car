@@ -69,7 +69,15 @@ def action2vel(action, robot_pos):
 def load_config():
     with open('despot_config.json', 'r') as fin:
         config = json.load(fin)
-
+    global SEARCH_DEPTH
+    global GAMMA
+    global GOAL
+    global EPSILON
+    global NUM_OF_SCENARIOS
+    global TIME_LEN
+    global LAMBDA
+    global ROAD_LEN
+    
     SEARCH_DEPTH = config['search_depth']
     GAMMA = config['gamma']
     GOAL = config['goal']
