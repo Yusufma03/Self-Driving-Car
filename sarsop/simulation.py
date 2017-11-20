@@ -21,7 +21,7 @@ class Simulation:
         self.x0 = X0_START
         self.y0 = 0
         self.t_i = 0
-        self.cmds = [self.get_vel()]
+        self.cmds = [[self.get_vel(), 0.0, 0.0]]
 
     def get_vel(self):
         lane = int(round(self.y0/SUBLANE_WIDTH))
