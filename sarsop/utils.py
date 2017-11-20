@@ -50,12 +50,13 @@ def make_dx_transition_matrix(y0, car):
 
     p = np.identity(NDX)
 
+    # TODO : this only works when speed = +/- 1 !!!!
     if speed > 0:
         p[:-speed, :] = np.roll(p[:-speed, :], speed, axis=1)
         p[-speed:,:] = 0
         p[-speed:,-1] = 1.0
 
-        p[0,:] = 0
+        p[0,:] = 0 
         p[0,0] = 0.5
         p[0,1] = 0.5
 
@@ -63,6 +64,10 @@ def make_dx_transition_matrix(y0, car):
         p[-speed:, :] = np.roll(p[-speed:, :], speed, axis=1)
         p[:-speed,:] = 0
         p[:-speed,0] = 1.0
+        
+        p[-1,:] = 0
+        p[-1,-1] = 0.5
+        p[-1,-2] = 0.5
 
     return p
 

@@ -40,10 +40,11 @@ def parse_policy(path):
 def get_optimal_action(belief, vectors, actions_vectors):
 
     b_y0,b_dx = belief
-    b_y0 = b_y0.reshape(-1,1)
-    b_dx = b_dx.reshape(1,-1)
 
-    b = b_y0.dot( b_dx ).flatten()
+    b = b_y0.reshape(-1,1)
+    for i in range(b_dx.shape[0]):
+        b = b.dot( b_dx[i,:].reshape(1,-1) ).reshape(-1,1)
+
     vals = vectors.dot( b )
 
     ind = np.argmax(vals)
