@@ -1,6 +1,8 @@
 {
     "nb_timesteps":300,
+    "dt":0.1,
     "num_lanes": 2,
+    "lane_width":3.0,
     "num_cars_per_lane": [1, 1],
     "car_start_poses": [[20], [11]],
     "autonomous_car_start_pos":10,
