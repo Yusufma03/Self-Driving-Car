@@ -1,0 +1,10 @@
+{
+    "search_depth": 5,
+    "gamma": 0.9,
+    "goal": 150,
+    "epsilon": 0.5,
+    "num_of_scenarios": 20,
+    "time_len": 1,
+    "lambda": 10,
+    "road_len": 150
+}

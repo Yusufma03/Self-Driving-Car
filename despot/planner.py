@@ -65,14 +65,31 @@ def action2vel(action, robot_pos):
         vel_y = 0
 
     return [vel_x, vel_y]
+
+def load_config():
+    with open('despot_config.json', 'r') as fin:
+        config = json.load(fin)
+
+    SEARCH_DEPTH = config['search_depth']
+    GAMMA = config['gamma']
+    GOAL = config['goal']
+    EPSILON = config['epsilon']
+    NUM_OF_SCENARIOS = config['num_of_scenarios']
+    TIME_LEN = config['time_len']
+    LAMBDA = config['lambda']
+    ROAD_LEN = config['road_len']
         
 
 if __name__=='__main__':
     data = load_data()
     index = 0
-    robot_pos = [28, 0]
+    load_config()
+    with open('../ros-lanechanging/autocar/scripts/lane_config.json', 'r') as fin:
+        parsed = json.load(fin)
+        robot_start_x = parsed['autonomous_car_start_pos']
+    robot_pos = [robot_start_x, 0]
     dump = []
-    while robot_pos[0] < 150:
+    while robot_pos[0] < ROAD_LEN - 5:
         agent_poses = get_agent_poses(data, index)
         if index == 0:
             agent_belief = to_belief(agent_poses)
