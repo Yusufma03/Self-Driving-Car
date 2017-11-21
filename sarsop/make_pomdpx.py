@@ -80,7 +80,7 @@ for i in range(1, NCARS):
 
 # ------------ StateTransitionFunction ----------------
 
-def make_transition_x_lane_others(n):
+def make_transition_dx_lane_others(n):
     condprob = ET.SubElement(statetransitionfunction, "CondProb")
     ET.SubElement(condprob, "Var").text = "dx%d_1" % n
     ET.SubElement(condprob, "Parent").text = "y0_0 dx%d_0" % n
@@ -123,7 +123,7 @@ ET.SubElement(entry, "ProbTable").text = table_to_str(p)
 
 #### dxi_1 ####
 for i in range(1, NCARS):
-    make_transition_x_lane_others(i) 
+    make_transition_dx_lane_others(i) 
 
 
 # ------------ ObsFunction ----------------
