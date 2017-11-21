@@ -14,6 +14,7 @@ NCARS = config["ncars"]
 NB_TIMESTEPS = config["nb_timesteps"]
 SUBLANE_WIDTH = config["sublane_width"]
 DT = config["dt"]
+EPSILON = 1e-8
 
 
 def parse_policy(path):
@@ -83,6 +84,11 @@ def observation_update(belief, obs):
 
     return b_y0_1,b_dx_1
 
+def add_epsilon(p):
+     p += EPSILON
+     p /= p.size
+     return p
+
 
 
 vectors,actions_vectors = parse_policy(sys.argv[1])
@@ -97,16 +103,21 @@ belief = b_y0,b_dx
 for i in range(NB_TIMESTEPS-1):
 
     print("Iter %d ----------" % i)
-    print("Initial belief :",belief[0],belief[1])
+    print("Initial belief :",belief[1])
     action = get_optimal_action(belief, vectors, actions_vectors)
-    print("Action :",action)
+    #print("Action :",action)
     simulation.step(action)
     belief = action_update(belief, action)
-    print("After action update :",belief[0],belief[1])
+    print("After action update :",belief[1])
     obs = simulation.observe()
     print("Observation :",obs)
     belief = observation_update(belief, obs)
-    print("After observation update :",belief[0],belief[1])
+    print("After observation update :",belief[1])
+
+    """belief = b_y0,b_dx
+    b_y0 = add_epsilon(b_y0)
+    b_dx = add_epsilon(b_dx)
+    b_y0,b_dx = belief"""
 
     print("\n")
 

@@ -2,10 +2,16 @@
 import json
 import numpy as np
 
-def update_vel(i, config):
-    mean_vel = config["mean_speed_per_lane"][i]
-    stdrr_vel = config["stdrr_speed_per_lane"][i]
-    return np.random.normal(mean_vel, stdrr_vel)
+def update_vel(lane, config):
+
+    v = config["mean_speed_per_lane"][lane]
+
+    probas = config["transition_probas"][lane]
+    n = len(probas)
+    speeds = v * np.arange(1,n+1) / n
+    speeds = np.round(speeds).astype(np.int32)
+
+    return np.random.choice(speeds, p=probas)
 
 
 with open('lane_config.json', 'r') as f:
@@ -18,6 +24,7 @@ np.random.seed(config["random_seed"])
 
 y_lane = 0
 poses = {}
+vels = {}
 lane_ids = {}
 
 count = 1
@@ -27,6 +34,7 @@ for i in range(config["num_lanes"]):
         key = 'robot_' + str(count)
         x = config["car_start_poses"][i][j]
         poses[key] = [[x, y_lane, 0]]
+        vels[key] = [0.0]
         lane_ids[key] = i
         count += 1
 
@@ -40,8 +48,12 @@ for t_i in range(0,nb_steps-1):
         x += vel * DT
         t = round(DT + t, 2)
         poses[key].append([x,y,t])
+        vels[key].append(float(vel))
 
 with open('poses.json', 'w') as f:
     json.dump(poses, f)
+
+with open('vels.json', 'w') as f:
+    json.dump(vels, f)
 
 

@@ -8,6 +8,7 @@ NDX = config["ndx"]
 NCARS = config["ncars"]
 CARS_SUBLANES = config["cars_sublanes"]
 OBS_PROBAS = config["obs_probas"]
+TRANSITION_PROBAS = config["transition_probas"]
 SUBLANES_SPEEDS_CELLS = config["sublanes_speeds_cells"]
 
 
@@ -47,28 +48,42 @@ def make_dx_transition_matrix(y0, car):
     assert car >= 1 and car < NCARS
 
     speed = SUBLANES_SPEEDS_CELLS[CARS_SUBLANES[car]] - SUBLANES_SPEEDS_CELLS[y0]
+    p_trans = TRANSITION_PROBAS[CARS_SUBLANES[car]]
 
-    p = np.identity(NDX)
+    p = np.zeros((NDX,NDX))
 
     if speed > 0:
-        p[:-speed, :] = np.roll(p[:-speed, :], speed, axis=1)
-        p[-speed:,:] = 0
-        p[-speed:,-1] = 1.0
-
         val = 1.0 / (speed+1)
         p[0,:] = 0 
         p[0,:speed+1] = val
 
-    elif speed < 0:
-        p[-speed:, :] = np.roll(p[-speed:, :], speed, axis=1)
-        p[:-speed,:] = 0
-        p[:-speed,0] = 1.0
-        
-        val = 1.0 / (speed+1)
-        p[-1,:] = 0 
-        p[-1,-(speed+1):] = val
+        l = len(p_trans)
+        for i in range(1,p.shape[0]):
+            idx = i+speed
+            if idx >= p.shape[1]:
+                m = idx - p.shape[1] + 1
+                p[i,idx-l+1:idx+1] = p_trans[:-m]
+                p[i,-1] += np.sum(p_trans[-m:])
+            else:
+                p[i,idx-l+1:idx+1] = p_trans
 
-    print(p)
+    elif speed <= 0:
+        val = 1.0 / (-speed+1)
+        p[-1,:] = 0 
+        p[-1,-(-speed+1):] = val
+        
+        l = len(p_trans)
+        for i in range(0,p.shape[0]-1):
+            idx = i+speed
+            if idx < 0:
+                p[i,0] = 1.0
+            elif idx-l+1 < 0:
+                m = l - idx - 1
+                p[i,:idx+1] = p_trans[m:]
+                p[i,0] += np.sum(p_trans[:m])
+            else:
+                p[i,idx-l+1:idx+1] = p_trans
+
     return p
 
 def make_dx_obs_matrix():

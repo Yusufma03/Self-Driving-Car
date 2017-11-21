@@ -37,6 +37,10 @@ def load_configs():
     lane_width = lane_config["lane_width"]
     config["sublane_width"] =  lane_width / num_sublanes_per_lane 
 
+    trans_probas = lane_config["transition_probas"]
+    trans_probas_repeated = np.repeat(trans_probas, num_sublanes_per_lane, axis=0)
+    config["transition_probas"] = trans_probas_repeated[side_sublanes_crop:-side_sublanes_crop]
+
     config["dt"] = dt
     config["cell_length"] = cell_length
     config["obs_probas"] = pomdp_config["obs_probas"]

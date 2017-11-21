@@ -1,0 +1,140 @@
+<?xml version="1.0" ?>
+<pomdpx>
+	<Discount>0.95</Discount>
+	<Variable>
+		<StateVar fullyObs="True" vnameCurr="y0_1" vnamePrev="y0_0">
+			<NumValues>4</NumValues>
+		</StateVar>
+		<StateVar fullyObs="False" vnameCurr="dx1_1" vnamePrev="dx1_0">
+			<NumValues>5</NumValues>
+		</StateVar>
+		<ObsVar vname="o_dx1">
+			<NumValues>5</NumValues>
+		</ObsVar>
+		<ActionVar vname="action">
+			<ValueEnum>none left right</ValueEnum>
+		</ActionVar>
+		<RewardVar vname="rew_obj"/>
+		<RewardVar vname="rew_out"/>
+		<RewardVar vname="rew_lane"/>
+		<RewardVar vname="rew_collision1"/>
+	</Variable>
+	<InitialStateBelief>
+		<CondProb>
+			<Var>y0_0</Var>
+			<Parent>null</Parent>
+			<Parameter type="TBL">
+				<Entry>
+					<Instance>-</Instance>
+					<ProbTable>1.0 0.0 0.0 0.0</ProbTable>
+				</Entry>
+			</Parameter>
+		</CondProb>
+		<CondProb>
+			<Var>dx1_0</Var>
+			<Parent>null</Parent>
+			<Parameter type="TBL">
+				<Entry>
+					<Instance>-</Instance>
+					<ProbTable>uniform</ProbTable>
+				</Entry>
+			</Parameter>
+		</CondProb>
+	</InitialStateBelief>
+	<StateTransitionFunction>
+		<CondProb>
+			<Var>y0_1</Var>
+			<Parent>action y0_0</Parent>
+			<Parameter type="TBL">
+				<Entry>
+					<Instance>none - -</Instance>
+					<ProbTable>identity</ProbTable>
+				</Entry>
+				<Entry>
+					<Instance>left - -</Instance>
+					<ProbTable>1.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0 0.0</ProbTable>
+				</Entry>
+				<Entry>
+					<Instance>right - -</Instance>
+					<ProbTable>0.0 1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 1.0</ProbTable>
+				</Entry>
+			</Parameter>
+		</CondProb>
+		<CondProb>
+			<Var>dx1_1</Var>
+			<Parent>y0_0 dx1_0</Parent>
+			<Parameter type="TBL">
+				<Entry>
+					<Instance>s0 - -</Instance>
+					<ProbTable>0.5 0.5 0.0 0.0 0.0 0.0 0.2 0.8 0.0 0.0 0.0 0.0 0.2 0.8 0.0 0.0 0.0 0.0 0.2 0.8 0.0 0.0 0.0 0.0 1.0</ProbTable>
+				</Entry>
+				<Entry>
+					<Instance>s1 - -</Instance>
+					<ProbTable>0.5 0.5 0.0 0.0 0.0 0.0 0.2 0.8 0.0 0.0 0.0 0.0 0.2 0.8 0.0 0.0 0.0 0.0 0.2 0.8 0.0 0.0 0.0 0.0 1.0</ProbTable>
+				</Entry>
+				<Entry>
+					<Instance>s2 - -</Instance>
+					<ProbTable>1.0 0.0 0.0 0.0 0.0 0.2 0.8 0.0 0.0 0.0 0.0 0.2 0.8 0.0 0.0 0.0 0.0 0.2 0.8 0.0 0.0 0.0 0.0 0.0 1.0</ProbTable>
+				</Entry>
+				<Entry>
+					<Instance>s3 - -</Instance>
+					<ProbTable>1.0 0.0 0.0 0.0 0.0 0.2 0.8 0.0 0.0 0.0 0.0 0.2 0.8 0.0 0.0 0.0 0.0 0.2 0.8 0.0 0.0 0.0 0.0 0.0 1.0</ProbTable>
+				</Entry>
+			</Parameter>
+		</CondProb>
+	</StateTransitionFunction>
+	<ObsFunction>
+		<CondProb>
+			<Var>o_dx1</Var>
+			<Parent>dx1_1</Parent>
+			<Parameter>
+				<Entry>
+					<Instance>- -</Instance>
+					<ProbTable>0.8 0.2 0.0 0.0 0.0 0.2 0.6 0.2 0.0 0.0 0.0 0.2 0.6 0.2 0.0 0.0 0.0 0.2 0.6 0.2 0.0 0.0 0.0 0.2 0.8</ProbTable>
+				</Entry>
+			</Parameter>
+		</CondProb>
+	</ObsFunction>
+	<RewardFunction>
+		<Func>
+			<Var>rew_obj</Var>
+			<Parent>y0_1</Parent>
+			<Parameter type="TBL">
+				<Entry>
+					<Instance>-</Instance>
+					<ValueTable>0 0 0 10</ValueTable>
+				</Entry>
+			</Parameter>
+		</Func>
+		<Func>
+			<Var>rew_lane</Var>
+			<Parent>action</Parent>
+			<Parameter type="TBL">
+				<Entry>
+					<Instance>-</Instance>
+					<ValueTable>0 -1 -1</ValueTable>
+				</Entry>
+			</Parameter>
+		</Func>
+		<Func>
+			<Var>rew_out</Var>
+			<Parent>action y0_1</Parent>
+			<Parameter type="TBL">
+				<Entry>
+					<Instance>- -</Instance>
+					<ValueTable>0 0 0 0 -10 0 0 0 0 0 0 -10</ValueTable>
+				</Entry>
+			</Parameter>
+		</Func>
+		<Func>
+			<Var>rew_collision1</Var>
+			<Parent>y0_1 dx1_1</Parent>
+			<Parameter type="TBL">
+				<Entry>
+					<Instance>- -</Instance>
+					<ValueTable>0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1000 0</ValueTable>
+				</Entry>
+			</Parameter>
+		</Func>
+	</RewardFunction>
+</pomdpx>
