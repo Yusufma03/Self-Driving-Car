@@ -1,23 +1,22 @@
 #!/usr/bin/env python
 import rospy 
 from std_msgs.msg import Bool
+from rosgraph_msgs.msg import Clock
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import *
 import numpy as np
 import json
 import os.path
+import time
 
 class SpeedController:
     def __init__(self, vels):
         self.path2config = rospy.get_param('~path2config', None)
-        self.hz = rospy.get_param('~hz', 10)
         with open(self.path2config, 'r') as f:
             self.config = json.load(f)
         
         self.initPubs()
-        self.rate = rospy.Rate(self.hz) 
         np.random.seed(self.config["random_seed"])
-        self.simu_started = False
 
         if vels is not None:
             self.playback = True
@@ -27,6 +26,7 @@ class SpeedController:
 
         self.t_i = 0
         self.end = False
+        self.simu_running = False
 
     def initPubs(self):
         self.robots = [] 
@@ -58,24 +58,23 @@ class SpeedController:
         return np.random.choice(speeds, p=probas)
     
     def start_simu(self, msg):
-        self.simu_started = msg
-        if self.simu_started:
+        self.simu_running = msg
+        if self.simu_running:
             print("Starting simulation")
 
-    def run(self):
-        while not rospy.is_shutdown() and not self.end:
-            if self.simu_started:
-                # publish the speed for each robot
-                for robot in self.robots:
-                    vel = self.update_vel(robot["key"])
-                    self.send_control(robot["pub"], vel)
-                self.t_i += 1
+    def step(self, msg):
+        if self.simu_running:
+            # publish the speed for each robot
+            for robot in self.robots:
+                vel = self.update_vel(robot["key"])
+                self.send_control(robot["pub"], vel)
+            self.t_i += 1
 
-                if self.t_i == self.config["nb_timesteps"]:
-                    self.end = True
-                    for robot in self.robots:
-                        self.send_control(robot["pub"], 0.0)
-                self.rate.sleep()
+            if self.t_i == self.config["nb_timesteps"]:
+                self.end = True
+                self.simu_running = False
+                for robot in self.robots:
+                    self.send_control(robot["pub"], 0.0)
             
     def send_control(self, robot_pub, vel):
         msg = Twist()
@@ -97,6 +96,7 @@ if __name__=='__main__':
         controller = SpeedController(None)
 
     rospy.Subscriber('/start_simu', Bool, controller.start_simu, queue_size=1)
-    
-    
-    controller.run()
+    rospy.Subscriber('/clock', Clock, controller.step, queue_size=1)
+        
+    while not controller.end and not rospy.is_shutdown():
+        time.sleep(0.2)

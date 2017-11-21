@@ -21,12 +21,10 @@
 
 
 <node pkg="autocar" type="lane_controller.py" name="lane_controller" respawn="false" output="screen">
-    <param name="hz" type="int" value="%d" />
     <param name="path2config" type="str" value="$(find autocar)/scripts/lane_config.json" />
     <param name="path2playback" type="str" value="$(find autocar)/scripts/vels.json" />
 </node>
 <node pkg="autocar" type="playback_controller.py" name="playback_controller" respawn="false" output="screen">
-    <param name="hz" type="int" value="%d" />
     <param name="path2config" type="str" value="$(find autocar)/scripts/lane_config.json" />
     <param name="path2playback" type="str" value="$(find autocar)/scripts/cmds.json" />
 </node>

@@ -14,7 +14,6 @@ NCARS = config["ncars"]
 NB_TIMESTEPS = config["nb_timesteps"]
 SUBLANE_WIDTH = config["sublane_width"]
 DT = config["dt"]
-EPSILON = 1e-8
 
 
 def parse_policy(path):
@@ -84,13 +83,6 @@ def observation_update(belief, obs):
 
     return b_y0_1,b_dx_1
 
-def add_epsilon(p):
-     p += EPSILON
-     p /= p.size
-     return p
-
-
-
 vectors,actions_vectors = parse_policy(sys.argv[1])
 simulation = Simulation("poses.json", "lane_config.json")
 
@@ -114,12 +106,7 @@ for i in range(NB_TIMESTEPS-1):
     belief = observation_update(belief, obs)
     print("After observation update :",belief[1])
 
-    """belief = b_y0,b_dx
-    b_y0 = add_epsilon(b_y0)
-    b_dx = add_epsilon(b_dx)
-    b_y0,b_dx = belief"""
-
-    print("\n")
+    #print("\n")
 
 simulation.step('none')
 simulation.write_commands()

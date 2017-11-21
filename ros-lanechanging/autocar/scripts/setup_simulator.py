@@ -39,8 +39,7 @@ with open('../maps/world/_active_world.world', 'w') as f:
 # --------- Generating .launch file ------------------------
 
 with open("../launch/launchfile_base", 'r') as f:
-    hz = int(round(1.0/config["dt"]))
-    launchfile_base = f.read() % (hz, hz)
+    launchfile_base = f.read()
 
 with open("../launch/template", 'r') as f:
     template = f.read()

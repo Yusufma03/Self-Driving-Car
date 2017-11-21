@@ -1,30 +1,30 @@
 #!/usr/bin/env python
 import rospy 
 from std_msgs.msg import Bool
+from rosgraph_msgs.msg import Clock
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import *
 import numpy as np
 import json
 import os
+import time
 
 class PlaybackController:
     
     def __init__(self, cmds):
         self.cmds = cmds
         self.path2config = rospy.get_param('~path2config', None)
-        self.hz = rospy.get_param('~hz', 10)
-        self.rate = rospy.Rate(self.hz)
         with open(self.path2config, 'r') as f:
             self.config = json.load(f)
         self.pub = rospy.Publisher('robot_0/cmd_vel', Twist, queue_size=1)
-        self.simu_started = False
+        self.simu_running = False
         self.t_i = 0
         self.end = False
         np.random.seed(self.config["random_seed"])
         
             
     def start_simu(self, msg):
-        self.simu_started = msg
+        self.simu_running = msg
     
     def send_control(self, cmd):
         msg = Twist()
@@ -33,17 +33,15 @@ class PlaybackController:
         msg.angular.z = 0
         self.pub.publish(msg)
             
-    def run(self):
-        while not rospy.is_shutdown() and not self.end:
-            if self.simu_started:
-                cmd = self.cmds[self.t_i]
-                self.send_control(cmd)
-                self.t_i += 1
-                if self.t_i == len(self.cmds):
-                    self.end = True
-                    self.send_control([0.0, 0.0])
-                
-                self.rate.sleep()
+    def step(self, msg):
+        if self.simu_running:
+            cmd = self.cmds[self.t_i]
+            self.send_control(cmd)
+            self.t_i += 1
+            if self.t_i == len(self.cmds):
+                self.simu_running = False
+                self.end = True
+                self.send_control([0.0, 0.0])
         
     
 
@@ -57,4 +55,8 @@ if __name__=='__main__':
             
         controller = PlaybackController(cmds)
         rospy.Subscriber('/start_simu', Bool, controller.start_simu, queue_size=1)
-        controller.run()
+        rospy.Subscriber('/clock', Clock, controller.step, queue_size=1)
+
+        while not controller.end and not rospy.is_shutdown():
+            time.sleep(0.2)
+
