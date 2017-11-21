@@ -10,3 +10,4 @@ acceleration_bounds [-10000 10000 -10000 10000 -10000 10000 -90 90]
 )
 
 speedup 0.2
+interval_sim 20
