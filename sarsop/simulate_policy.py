@@ -15,6 +15,8 @@ NB_TIMESTEPS = config["nb_timesteps"]
 SUBLANE_WIDTH = config["sublane_width"]
 DT = config["dt"]
 
+SPEED_TRANS_PROBAS = [ [[0.8, 0.2],[0.5, 0.5]] , [[0.5, 0.5],[0.2, 0.8]] ]
+
 
 def parse_policy(path):
 
@@ -39,11 +41,12 @@ def parse_policy(path):
 
 def get_optimal_action(belief, vectors, actions_vectors):
 
-    b_y0,b_dx = belief
+    b_y0,b_dx,b_vx = belief
 
     b = b_y0.reshape(-1,1)
     for i in range(b_dx.shape[0]):
         b = b.dot( b_dx[i,:].reshape(1,-1) ).reshape(-1,1)
+        b = b.dot( b_vx[i,:].reshape(1,-1) ).reshape(-1,1)
 
     vals = vectors.dot( b )
 
@@ -55,7 +58,7 @@ def get_optimal_action(belief, vectors, actions_vectors):
 
 def action_update(belief, action):
 
-    b_y0_0,b_dx_0 = belief
+    b_y0_0,b_dx_0,b_vx_0 = belief
 
     y0_trans = make_y0_transition_matrix(action)
     b_y0_1 = y0_trans.T.dot( b_y0_0 )
@@ -92,7 +95,8 @@ simulation = Simulation("poses.json", "lane_config.json")
 b_y0 = np.zeros(NY)
 b_y0[0] = 1.0
 b_dx = np.ones((NCARS-1, NDX)) / NDX
-belief = b_y0,b_dx
+b_vx = np.ones((NCARS-1, NVX)) / NVX
+belief = b_y0,b_dx,b_vx
 
 for i in range(NB_TIMESTEPS-1):
 

@@ -14,6 +14,10 @@ CARS_SUBLANES = config["cars_sublanes"]
 DISCOUNT = config["discount"]
 REWARDS = config["rewards"]
 
+NVX = 2
+SPEEDS = [1,2]
+SPEED_OBS_PROBAS = [ [0.8, 0.2], [0.2, 0.8] ]
+
 
 pomdpx = ET.Element("pomdpx")
 
@@ -37,11 +41,15 @@ make_state_var("y0", NY, fullyobs=True)
 
 for i in range(1, NCARS):
     make_state_var("dx%d" % i, NDX, fullyobs=False)
+    make_state_var("vx%d" % i, NVX, fullyobs=False)
 
 #### Observation variables ####
 for i in range(1, NCARS):
     obsvar = ET.SubElement(variable, "ObsVar", vname="o_dx%d" % i)
     ET.SubElement(obsvar, "NumValues").text = str(NDX)
+    
+    obsvar = ET.SubElement(variable, "ObsVar", vname="o_vx%d" % i)
+    ET.SubElement(obsvar, "NumValues").text = str(NVX)
 
 #### Action variables ####
 actionvar = ET.SubElement(variable, "ActionVar", vname="action")
@@ -76,6 +84,7 @@ make_initial_cond_prob("y0_0", table_to_str(p))
 
 for i in range(1, NCARS):
     make_initial_cond_prob("dx%d_0" % i, "uniform")
+    make_initial_cond_prob("vx%d_0" % i, "uniform")
 
 
 # ------------ StateTransitionFunction ----------------
@@ -83,15 +92,27 @@ for i in range(1, NCARS):
 def make_transition_dx_lane_others(n):
     condprob = ET.SubElement(statetransitionfunction, "CondProb")
     ET.SubElement(condprob, "Var").text = "dx%d_1" % n
-    ET.SubElement(condprob, "Parent").text = "y0_0 dx%d_0" % n
+    ET.SubElement(condprob, "Parent").text = "y0_0 vx%d_0 dx%d_0" % (n,n)
     parameter = ET.SubElement(condprob, "Parameter", type="TBL")
 
     for i in range(NY):
+        for j in range(NVX):
 
-        entry = ET.SubElement(parameter, "Entry")
-        ET.SubElement(entry, "Instance").text = "s%d - -" % i
-        p = make_dx_transition_matrix(i, n)
-        ET.SubElement(entry, "ProbTable").text = table_to_str(p)
+            entry = ET.SubElement(parameter, "Entry")
+            ET.SubElement(entry, "Instance").text = "s%d s%d - -" % (i,j)
+            p = make_dx_transition_matrix(i, SPEEDS[j])
+            ET.SubElement(entry, "ProbTable").text = table_to_str(p)
+
+def make_transition_vx_lane_others(n):
+    condprob = ET.SubElement(statetransitionfunction, "CondProb")
+    ET.SubElement(condprob, "Var").text = "vx%d_1" % n
+    ET.SubElement(condprob, "Parent").text = "vx%d_0" % n
+    parameter = ET.SubElement(condprob, "Parameter", type="TBL")
+
+    entry = ET.SubElement(parameter, "Entry")
+    ET.SubElement(entry, "Instance").text = "- -"
+    p = make_vx_transition_matrix(n)
+    ET.SubElement(entry, "ProbTable").text = table_to_str(p)
 
 
 statetransitionfunction = ET.SubElement(pomdpx, "StateTransitionFunction")
@@ -125,6 +146,11 @@ ET.SubElement(entry, "ProbTable").text = table_to_str(p)
 for i in range(1, NCARS):
     make_transition_dx_lane_others(i) 
 
+#### vxi_1 ####
+for i in range(1, NCARS):
+    make_transition_vx_lane_others(i)
+
+
 
 # ------------ ObsFunction ----------------
 
@@ -147,6 +173,11 @@ for i in range(1, NCARS):
     p = make_dx_obs_matrix()
     p_str = table_to_str(p)
     make_obs_cond_prob("dx", i, p_str)
+    
+    #### o_vxi ####
+    p = np.array(SPEED_OBS_PROBAS)
+    p_str = table_to_str(p)
+    make_obs_cond_prob("vx", i, p_str)
 
 
 # ------------ RewardFunction ----------------

@@ -8,7 +8,13 @@ NDX = config["ndx"]
 NCARS = config["ncars"]
 CARS_SUBLANES = config["cars_sublanes"]
 OBS_PROBAS = config["obs_probas"]
+
 SUBLANES_SPEEDS_CELLS = config["sublanes_speeds_cells"]
+
+NVX = 2
+SPEEDS = [1,2]
+SPEED_TRANS_PROBAS = [ [[0.8, 0.2],[0.5, 0.5]] , [[0.5, 0.5],[0.2, 0.8]] ]
+SPEED_OBS_PROBAS = [ [0.8, 0.2], [0.2, 0.8] ]
 
 
 def table_to_str(table, mode='float'):
@@ -41,12 +47,12 @@ def make_y0_transition_matrix(action):
 
     return p
 
-def make_dx_transition_matrix(y0, car):
+def make_dx_transition_matrix(y0, vx):
 
     assert y0 >= 0 and y0 < NY
-    assert car >= 1 and car < NCARS
+    assert vx in SPEEDS
 
-    speed = SUBLANES_SPEEDS_CELLS[CARS_SUBLANES[car]] - SUBLANES_SPEEDS_CELLS[y0]
+    speed = vx - SUBLANES_SPEEDS_CELLS[y0]
 
     p = np.identity(NDX)
 
@@ -64,11 +70,18 @@ def make_dx_transition_matrix(y0, car):
         p[:-speed,:] = 0
         p[:-speed,0] = 1.0
         
-        val = 1.0 / (speed+1)
+        val = 1.0 / (-speed+1)
         p[-1,:] = 0 
-        p[-1,-(speed+1):] = val
+        p[-1,-(-speed+1):] = val
 
     print(p)
+    return p
+
+def make_vx_transition_matrix(car):
+
+    sublane = CARS_SUBLANES[car-1]
+    p = np.array(SPEED_TRANS_PROBAS[sublane])
+
     return p
 
 def make_dx_obs_matrix():
@@ -88,5 +101,7 @@ def make_dx_obs_matrix():
         p[i,:] = squeezed
 
     return p
+
+
 
 
