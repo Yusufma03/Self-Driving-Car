@@ -41,6 +41,7 @@ class PlaybackController:
                 self.t_i += 1
                 if self.t_i == len(self.cmds):
                     self.end = True
+                    self.send_control([0.0, 0.0])
                 
                 self.rate.sleep()
         

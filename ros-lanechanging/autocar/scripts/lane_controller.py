@@ -26,6 +26,7 @@ class SpeedController:
             self.playback = False
 
         self.t_i = 0
+        self.end = False
 
     def initPubs(self):
         self.robots = [] 
@@ -62,13 +63,18 @@ class SpeedController:
             print("Starting simulation")
 
     def run(self):
-        while not rospy.is_shutdown():
+        while not rospy.is_shutdown() and not self.end:
             if self.simu_started:
                 # publish the speed for each robot
                 for robot in self.robots:
                     vel = self.update_vel(robot["key"])
                     self.send_control(robot["pub"], vel)
                 self.t_i += 1
+
+                if self.t_i == self.config["nb_timesteps"]:
+                    self.end = True
+                    for robot in self.robots:
+                        self.send_control(robot["pub"], 0.0)
                 self.rate.sleep()
             
     def send_control(self, robot_pub, vel):
