@@ -5,7 +5,7 @@
     "lane_width":3.0,
     "num_cars_per_lane": [0, 5],
     "car_start_poses": [[], [100, 90, 80, 70, 60]],
-    "autonomous_car_start_pos":100,
+    "autonomous_car_start_pos":102,
     "mean_speed_per_lane": [20, 40],
     "stdrr_speed_per_lane": [0, 0],
     "random_seed":123

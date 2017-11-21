@@ -155,9 +155,12 @@ class Scenario(object):
         elif new_robot.x >= GOAL:
             reward = 50
         elif action is LEFT:
-            reward = 10
+            if new_robot.y != -3:
+                reward = -5
+            else:
+                reward = 50
         else:
-            reward = -0.2
+            reward = 0
 
         return reward
 
