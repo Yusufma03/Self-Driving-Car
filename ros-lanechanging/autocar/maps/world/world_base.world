@@ -1,6 +1,6 @@
 define gc position
 (
-size [2.000 1.000 1.000]
+size [1.800 1.000 1.000]
 origin [0.0 0.0 0.0 0.0]
 drive "omni"
 localization "gps"
