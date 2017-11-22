@@ -1,3 +1,6 @@
+# simulation.py
+# This class does the actual simulation and allow to observe other cars.
+
 import json
 import numpy as np
 from utils import *

@@ -1,3 +1,6 @@
+# utils.py
+# This file contains some utility functions used by both the POMDPX generator and the simulator.
+
 import numpy as np
 from config_utils import load_configs
 
@@ -11,7 +14,7 @@ OBS_PROBAS = config["obs_probas"]
 TRANSITION_PROBAS = config["transition_probas"]
 SUBLANES_SPEEDS_CELLS = config["sublanes_speeds_cells"]
 
-
+# Turns a numpy array into a one-line string suitable for writing into the POMDPX file
 def table_to_str(table, mode='float'):
 
     if len(table.shape) == 1:
@@ -51,6 +54,7 @@ def make_dx_transition_matrix(speed_autonomous, car):
 
     p = np.zeros((NDX,NDX))
 
+    # The following part creates the transition matrix based on the differential speed AND the unicertainties in movement.
     if diff_speed > 0:
         val = 1.0 / (diff_speed+1)
         p[0,:] = 0 
@@ -83,7 +87,6 @@ def make_dx_transition_matrix(speed_autonomous, car):
             else:
                 p[i,idx-l+1:idx+1] = p_trans
 
-    print(p)
     return p
 
 def make_dx_obs_matrix():
@@ -91,6 +94,8 @@ def make_dx_obs_matrix():
     l = len(OBS_PROBAS)
     half_l = int(len(OBS_PROBAS)/2)
 
+    # The observation probas are given for the neighboring cells, but if the true cells is on the edge,
+    # then there may be fewer neighboring cells than probabilities ! This is why we have to add probabilities together.
     for i in range(p.shape[0]):
         expanded = np.zeros(NDX + 2*half_l)
         expanded[i:i+l] = OBS_PROBAS
