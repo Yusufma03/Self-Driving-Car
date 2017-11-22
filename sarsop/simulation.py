@@ -24,7 +24,7 @@ class Simulation:
         self.cmds = [[self.get_vel(), 0.0, 0.0]]
 
     def get_vel(self):
-        lane = int(round(self.y0/SUBLANE_WIDTH))
+        lane = int(round(abs(self.y0)/SUBLANE_WIDTH))
         vel = SUBLANES_SPEEDS[lane]
         return vel
     
@@ -36,10 +36,10 @@ class Simulation:
         self.x0 += vx * DT
 
         if action == "left":
-            self.y0 = max(0, self.y0-SUBLANE_WIDTH)
+            self.y0 = max(0, self.y0+SUBLANE_WIDTH)
             vy = SUBLANE_WIDTH / DT
         elif action == "right":
-            self.y0 = min((NY-1)*SUBLANE_WIDTH, self.y0+SUBLANE_WIDTH)
+            self.y0 = min((NY-1)*SUBLANE_WIDTH, self.y0-SUBLANE_WIDTH)
             vy = -SUBLANE_WIDTH / DT
         else:
             vy = 0.0
