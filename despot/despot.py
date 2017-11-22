@@ -46,7 +46,7 @@ def back_up_node(nodes_array, node_id):
     uppers = []
     lowers = []
 
-    for action in range(3):
+    for action in range(NUM_OF_ACTIONS):
         first = (1.0 / len(node.scenarios)) * \
             np.sum([scenario.get_reward(action)
                     for scenario in node.scenarios])
@@ -84,7 +84,7 @@ def back_up(nodes_array, history):
 def planning(nodes_array):
     root = nodes_array[0]
     q_values = []
-    for action in range(3):
+    for action in range(NUM_OF_ACTIONS):
         reward = root.get_average_reward(action)
         value = np.sum([
             regularized_value(child, nodes_array)
@@ -105,7 +105,7 @@ def regularized_value(node_id, nodes_array):
         return v1
 
     v2s = []
-    for action in range(3):
+    for action in range(NUM_OF_ACTIONS):
         v2_t = node.get_average_reward(action)
         v2_t += np.sum([
             regularized_value(child, nodes_array)

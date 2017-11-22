@@ -10,6 +10,9 @@ CARS = 5
 LEFT = 0
 STAY = 1
 RIGHT = 2
+LEFT_FAST = 3
+STAY_FAST = 4
+RIGHT_FAST = 5
 GOAL = 160
 BOUNDARY = -1
 EPSILON = 0.5
@@ -19,6 +22,7 @@ LEFT_MOST = -4
 RIGHT_MOST = 1
 LAMBDA = 10
 ROAD_LEN = 160
+NUM_OF_ACTIONS = 6
 
 
 class AgentCar(object):
@@ -51,6 +55,8 @@ class AgentCar(object):
         rand = (self.bias + rand_num) / 2
         if self.y < BOUNDARY:
             vel_x = 4
+            if rand < 0.2:
+                vel_x = 2
         else:
             vel_x = 2
         new_x, new_y = self.x + vel_x, self.y
@@ -64,8 +70,11 @@ class AgentCar(object):
         return str(self.x) + str(self.y)
 
     def predict(self):
+        random = np.random.random()
         if self.y < BOUNDARY:
             vel_x = 4
+            if random < 0.2:
+                vel_x = 2
         else:
             vel_x = 2
         new_x, new_y = self.x + vel_x, self.y
@@ -86,15 +95,30 @@ class RobotCar(object):
         '''
         action has three choices: LEFT, STAY, RIGHT
         '''
-        if action == LEFT and self.y > LEFT_MOST:
+        # if action == LEFT and self.y > LEFT_MOST:
+        #     vel_y = -1
+        # elif action == RIGHT and self.y < RIGHT_MOST:
+        #     vel_y = +1
+        # else:
+        #     vel_y = 0
+        
+        # if self.y < BOUNDARY:
+        #     vel_x = 4
+        # else:
+        #     vel_x = 2
+
+        if (action == LEFT or action == LEFT_FAST) and self.y > LEFT_MOST:
             vel_y = -1
-        elif action == RIGHT and self.y < RIGHT_MOST:
+        elif (action == RIGHT or action == RIGHT_FAST) and self.y < RIGHT_MOST:
             vel_y = +1
         else:
             vel_y = 0
         
         if self.y < BOUNDARY:
-            vel_x = 4
+            if action in [LEFT_FAST, STAY_FAST, RIGHT_FAST]:
+                vel_x = 4
+            else:
+                vel_x = 2
         else:
             vel_x = 2
 
@@ -150,17 +174,37 @@ class Scenario(object):
         ]
 
         collision = new_robot.collide(new_poses)
+        reward = 0
         if collision:
-            reward = -100
-        elif new_robot.x >= GOAL:
-            reward = 50
-        elif action is LEFT:
-            if new_robot.y != -3:
-                reward = -5
-            else:
-                reward = 50
-        else:
-            reward = 0
+            reward += -1000
+        if new_robot.x >= GOAL:
+            reward += 50
+        if action in [LEFT_FAST, STAY_FAST, RIGHT_FAST]:
+            reward += 5
+        if new_robot.y != -3:
+            reward += -10
+        if new_robot.y < LEFT_MOST:
+            reward += -100
+        if new_robot.y > RIGHT_MOST:
+            reward += -100
+        
+        # elif action == LEFT or action == LEFT_FAST:
+        #     if new_robot.y != -3:
+        #         reward = -10
+        #     else:
+        #         reward = 50
+        #     if new_robot.y < -4:
+        #         reward = -100
+        #         new_robot.y = -4
+        # elif action == RIGHT or action == RIGHT_FAST:
+        #     if new_robot.y == -3:
+        #         reward = 5
+        #     else:
+        #         reward = -5
+        # else:
+        #     reward = -5
+
+        
 
         return reward
 
@@ -178,7 +222,7 @@ class Node(object):
         self.depth = depth
         self.id = node_id
         self.scenarios = []
-        self.children = [dict() for _ in range(3)]
+        self.children = [dict() for _ in range(NUM_OF_ACTIONS)]
         self.uppers = None
         self.lowers = None
         self.weu = None
@@ -187,7 +231,7 @@ class Node(object):
         self.scenarios.append(scenario)
 
     def expand(self, nodes_array):
-        for action in range(3):
+        for action in range(NUM_OF_ACTIONS):
             for scenario in self.scenarios:
                 new_scenario = scenario.step(action)
                 obs = new_scenario.to_str()
@@ -226,16 +270,16 @@ class Node(object):
         if self.uppers is None or self.lowers is None:
             lowers = []
             uppers = []
-            for action in range(3):
-                if action == LEFT:
+            for action in range(NUM_OF_ACTIONS):
+                if action == LEFT or LEFT_FAST:
                     uppers.append(50)
-                    lowers.append(-100)
-                elif action == STAY:
+                    lowers.append(-1000)
+                elif action == STAY or STAY_FAST:
                     uppers.append(50)
-                    lowers.append(-0.2)
-                else:
+                    lowers.append(-5)
+                elif action == RIGHT or RIGHT_FAST:
                     uppers.append(50)
-                    lowers.append(-100)
+                    lowers.append(-1000)
 
             self.uppers = uppers
             self.lowers = lowers

@@ -13,7 +13,7 @@ def get_agent_poses(dic, index):
     return ret
 
 def x2belief(x):
-    belief = np.zeros(ROAD_LEN)
+    belief = np.zeros(ROAD_LEN+100)
     x = int(x)
     belief[x] = 0.8
     belief[x-1] = 0.1
@@ -34,17 +34,15 @@ def shift_belief(belief, bits):
     else:
         return np.concatenate((belief[bits:], np.zeros(bits)))
 
-def update_belief(beliefs, observations):
+def update_belief(beliefs, observations, old_observations):
     new_beliefs = []
     for i in range(len(beliefs)):
         belief = beliefs[i]
         x_belief, y = belief
-        if y < BOUNDARY:
-            vel_x = 4
-        else:
-            vel_x = 2
-        x_belief_shifted = shift_belief(x_belief, vel_x)
         x_obs, y_obs = observations[i]
+        x_obs_old, y_obs_old = old_observations[i]
+        vel_x = int(x_obs - x_obs_old)
+        x_belief_shifted = shift_belief(x_belief, vel_x)
         x_belief_obs = x2belief(x_obs)
         x_belief_new = x_belief_shifted * x_belief_obs
         x_belief_new = x_belief_new / np.sum(x_belief_new)
@@ -55,11 +53,13 @@ def action2vel(action, robot_pos):
     x, y = robot_pos
     if y < BOUNDARY:
         vel_x = 4
+        if action in [LEFT, STAY, RIGHT]:
+            vel_x = 2
     else:
         vel_x = 2
-    if action == LEFT and y > LEFT_MOST:
+    if (action == LEFT or action == LEFT_FAST) and y > LEFT_MOST:
         vel_y = -1
-    elif action == RIGHT and y < RIGHT_MOST:
+    elif (action == RIGHT or action == RIGHT_FAST) and y < RIGHT_MOST:
         vel_y = +1
     else:
         vel_y = 0
@@ -98,11 +98,11 @@ if __name__=='__main__':
     robot_pos = [robot_start_x, 0]
     dump = []
     while robot_pos[0] < ROAD_LEN - 5:
-        agent_poses = get_agent_poses(data, index)
+        agent_poses_new = get_agent_poses(data, index)
         if index == 0:
-            agent_belief = to_belief(agent_poses)
+            agent_belief = to_belief(agent_poses_new)
         else:
-            agent_belief = update_belief(agent_belief, agent_poses)
+            agent_belief = update_belief(agent_belief, agent_poses_new, agent_poses_old)
 
         despot_tree = build_despot(robot_pos, agent_belief)
         action = planning(despot_tree)
@@ -112,6 +112,7 @@ if __name__=='__main__':
         print(robot_pos)
         dump.append([vel_x*10, vel_y*10, index / 10.0])
         index += 1
+        agent_poses_old = agent_poses_new
     
     with open('cmds.json', 'w') as fout:
         json.dump(dump, fout)
