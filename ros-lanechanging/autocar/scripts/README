@@ -1,0 +1,7 @@
+Run
+python generate_poses.py
+to generate position and velocity history for the agent cars (files poses.json and vels.json).
+
+Run
+./start_simulator
+to start ROS and playback the agent cars history as well as the commands given by the policy (cmds.json).

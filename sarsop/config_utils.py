@@ -1,3 +1,6 @@
+# config_utils.py
+# Aggregates configuration from lane_config.json and pomdp_config.json into a global config dictionary.
+
 import json
 import numpy as np
 

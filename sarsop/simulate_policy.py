@@ -1,3 +1,7 @@
+# simulate_policy.py
+# Takes a policy file as input and tests it against a simulation.
+# The simulation uses recorded car positions created by the script "generate_poses.py"
+
 import xml.etree.ElementTree as ET
 import sys
 import json

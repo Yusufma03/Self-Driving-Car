@@ -1,3 +1,6 @@
+# simulation.py
+# This class does the actual simulation and allow to observe other cars.
+
 import json
 import numpy as np
 from utils import *
@@ -54,7 +57,6 @@ class Simulation:
 
             x_car = self.poses["robot_%d" % car][self.t_i][0]
             dx = x_car - self.x0
-            print("dx :", dx)    
 
             lookahead = int(NDX/2)
             dx_discretized = int(round(dx / CELL_LENGTH))

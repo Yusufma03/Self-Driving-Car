@@ -1,0 +1,2 @@
+Put pomdp_config.json in this folder and lane_config.json in ../../ros-lanechanging/autocar/scripts/.
+Then run ./run_sarsop.sh to generate the policy file and simulate it. It will output the file cmds.json in ../../ros-lanechanging/autocar/scripts/, so you can visualize it.
