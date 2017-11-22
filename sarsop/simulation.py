@@ -13,6 +13,7 @@ CELL_LENGTH = config["cell_length"]
 DT = config["dt"]
 SUBLANES_SPEEDS = config["sublanes_speeds"]
 X0_START = config["autonomous_car_start_pos"]
+LANES_SPEEDS = config["lanes_speeds"]
 
 class Simulation:
 
@@ -21,24 +22,22 @@ class Simulation:
         self.x0 = X0_START
         self.y0 = 0
         self.t_i = 0
-        self.cmds = [[self.get_vel(), 0.0, 0.0]]
+        self.cmds = [[0.0, 0.0, 0.0]]
 
-    def get_vel(self):
-        lane = int(round(abs(self.y0)/SUBLANE_WIDTH))
-        vel = SUBLANES_SPEEDS[lane]
-        return vel
     
     def step(self, action):
+        lateral_action,speed_action_id = action
+        speed = LANES_SPEEDS[speed_action_id]
 
         self.t_i += 1
 
-        vx = self.get_vel()
+        vx = speed
         self.x0 += vx * DT
 
-        if action == "left":
+        if lateral_action == "left":
             self.y0 = max(0, self.y0+SUBLANE_WIDTH)
             vy = SUBLANE_WIDTH / DT
-        elif action == "right":
+        elif lateral_action == "right":
             self.y0 = min((NY-1)*SUBLANE_WIDTH, self.y0-SUBLANE_WIDTH)
             vy = -SUBLANE_WIDTH / DT
         else:
@@ -55,16 +54,16 @@ class Simulation:
 
             x_car = self.poses["robot_%d" % car][self.t_i][0]
             dx = x_car - self.x0
+            print("dx :", dx)    
 
+            lookahead = int(NDX/2)
             dx_discretized = int(round(dx / CELL_LENGTH))
-            if dx_discretized >= 1:
+            if dx_discretized >= lookahead:
                 dx_i  = NDX-1
-            elif dx_discretized <= -(NDX-2):
+            elif dx_discretized <= -lookahead:
                 dx_i = 0
             else:
-                dx_i = dx_discretized + NDX-2
-
-            print("True dx_i :", dx_i)
+                dx_i = lookahead + dx_discretized
 
             probas = make_dx_obs_matrix()
             probas_car = probas[dx_i,:]

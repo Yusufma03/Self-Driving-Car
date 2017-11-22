@@ -1,0 +1,17 @@
+{
+    "discount": 0.9,
+    "n_epochs": 100,
+    "max_steps": 100,
+    "epsilon_start": 0.5,
+    "epsilon_minimum": 0.1,
+    "epsilon_decay": 0.95,
+    "epsilon_decay_step": 20,
+    "n_sims": 100,
+    "timeout": 3600,
+    "ucb_coefficient": 3.0,
+    "n_start_states": 2000,
+    "min_particle_count": 100,
+    "max_particle_count": 200,
+    "max_depth": 100,
+    "action_selection_timeout": 20
+}

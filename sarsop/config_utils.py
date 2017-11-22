@@ -17,6 +17,9 @@ def load_configs():
     num_cars_per_lane = lane_config["num_cars_per_lane"]
     config["ncars"] = sum(num_cars_per_lane) + 1
 
+    config["num_lanes"] = num_lanes
+    config["num_sublanes_per_lane"] = num_sublanes_per_lane
+
     cars_lanes = [0]
     for lane_id in range(len(num_cars_per_lane)):
         nb_cars_lane = num_cars_per_lane[lane_id]
@@ -28,10 +31,12 @@ def load_configs():
     lanes_speeds = lane_config["mean_speed_per_lane"]
     lanes_speeds_repeated = np.repeat(lanes_speeds, num_sublanes_per_lane)
     config["sublanes_speeds"] = lanes_speeds_repeated[side_sublanes_crop:-side_sublanes_crop].tolist()
+    config["lanes_speeds"] = lanes_speeds
 
     dt = lane_config["dt"]
     cell_length = pomdp_config["cell_length"]
 
+    config["lanes_speeds_cells"] = [int(round(speed * dt / cell_length)) for speed in config["lanes_speeds"]]
     config["sublanes_speeds_cells"] = [int(round(speed * dt / cell_length)) for speed in config["sublanes_speeds"]]
 
     lane_width = lane_config["lane_width"]
