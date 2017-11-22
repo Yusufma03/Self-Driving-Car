@@ -54,14 +54,16 @@ class Simulation:
 
             x_car = self.poses["robot_%d" % car][self.t_i][0]
             dx = x_car - self.x0
+            print("dx :", dx)    
 
+            lookahead = int(NDX/2)
             dx_discretized = int(round(dx / CELL_LENGTH))
-            if dx_discretized >= 1:
+            if dx_discretized >= lookahead:
                 dx_i  = NDX-1
-            elif dx_discretized <= -(NDX-2):
+            elif dx_discretized <= -lookahead:
                 dx_i = 0
             else:
-                dx_i = dx_discretized + NDX-2
+                dx_i = lookahead + dx_discretized
 
             probas = make_dx_obs_matrix()
             probas_car = probas[dx_i,:]

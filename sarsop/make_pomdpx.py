@@ -15,6 +15,8 @@ DISCOUNT = config["discount"]
 REWARDS = config["rewards"]
 LANES_SPEEDS_CELLS = config["lanes_speeds_cells"]
 NVX = len(LANES_SPEEDS_CELLS)
+NUM_LANES = config["num_lanes"]
+NUM_SUBLANES_PER_LANE = config["num_sublanes_per_lane"]
 
 
 pomdpx = ET.Element("pomdpx")
@@ -52,12 +54,13 @@ valueenum.text = "none left right"
 
 actionvar = ET.SubElement(variable, "ActionVar", vname="speed")
 valueenum = ET.SubElement(actionvar, "NumValues")
-valueenum.text = "2"
+valueenum.text = str(NVX)
 
 #### Reward variables ####
 rewardvar = ET.SubElement(variable, "RewardVar", vname="rew_obj")
 rewardvar = ET.SubElement(variable, "RewardVar", vname="rew_out")
 rewardvar = ET.SubElement(variable, "RewardVar", vname="rew_overspeed")
+rewardvar = ET.SubElement(variable, "RewardVar", vname="rew_sublane")
 for i in range(1,NCARS):
     rewardvar = ET.SubElement(variable, "RewardVar", vname="rew_collision%d" % i)
 
@@ -194,17 +197,23 @@ for i in range(NY):
             v[j,i] = REWARDS["overspeed"]
 make_reward("rew_overspeed", ["speed", "y0_1"], table_to_str(v, mode='int'))
 
+# Sublane reward
+v = np.ones(NY, np.int32) * REWARDS["sublane"]
+d = int(NUM_SUBLANES_PER_LANE)
+for i in range(NUM_LANES):
+    v[i*d] = 0
+make_reward("rew_sublane", ["y0_1"], table_to_str(v, mode='int'))
+
 
 # Collision reward
 for i in range(1, NCARS):
     v = np.zeros((NY,NDX), np.int32)
-    lane = CARS_SUBLANES[i]
-    v[lane, -2] = REWARDS["collision"]
+    sublane = CARS_SUBLANES[i]
 
-    """if lane+1 < 4:
-        v[lane+1, -2] = REWARDS["collision"]
-    if lane-1 >= 0:
-        v[lane-1, -2] = REWARDS["collision"]"""
+    half = int(NUM_SUBLANES_PER_LANE/2)
+    i1 = max(0, sublane-half)
+    i2 = min(NY, sublane+half+1)
+    v[sublane, i1:i2] = REWARDS["collision"]
 
     make_reward("rew_collision%d" % i, ["y0_1", "dx%d_1" % i], table_to_str(v, mode='int'))
 
