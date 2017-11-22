@@ -1,5 +1,5 @@
 {
-    "nb_timesteps":300,
+    "nb_timesteps":50,
     "dt":0.1,
     "ros_dt_mult":5,
     "num_lanes": 2,

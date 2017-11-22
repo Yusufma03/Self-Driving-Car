@@ -14,6 +14,8 @@ NCARS = config["ncars"]
 NB_TIMESTEPS = config["nb_timesteps"]
 SUBLANE_WIDTH = config["sublane_width"]
 DT = config["dt"]
+LANES_SPEEDS_CELLS = config["lanes_speeds_cells"]
+
 
 
 def parse_policy(path):
@@ -50,22 +52,25 @@ def get_optimal_action(belief, vectors, actions_vectors):
     ind = np.argmax(vals)
     action_id = actions_vectors[ind]
 
-    return ["none", "left", "right"][action_id]
+    lateral_action_id = action_id // 2
+    speed_action_id = action_id % 2
+
+    return ["none", "left", "right"][lateral_action_id],speed_action_id
 
 
 def action_update(belief, action):
 
     b_y0_0,b_dx_0 = belief
+    lateral_action,speed_action_id = action
+    speed = LANES_SPEEDS_CELLS[speed_action_id]
 
-    y0_trans = make_y0_transition_matrix(action)
+    y0_trans = make_y0_transition_matrix(lateral_action)
     b_y0_1 = y0_trans.T.dot( b_y0_0 )
 
     b_dx_1 = np.zeros((NCARS-1, NDX))
     for car in range(1,NCARS):
-        for y0 in range(NY):
-
-            dx_trans = make_dx_transition_matrix(y0, car)
-            b_dx_1[car-1,:] += b_y0_0[y0] * dx_trans.T.dot( b_dx_0[car-1,:] )
+        dx_trans = make_dx_transition_matrix(speed, car)
+        b_dx_1[car-1,:] = dx_trans.T.dot( b_dx_0[car-1,:] )
 
     return b_y0_1,b_dx_1
 
@@ -97,7 +102,7 @@ for i in range(NB_TIMESTEPS-1):
     print("Iter %d ----------" % i)
     print("Initial belief :",belief[1])
     action = get_optimal_action(belief, vectors, actions_vectors)
-    #print("Action :",action)
+    print("Action :",action)
     simulation.step(action)
     belief = action_update(belief, action)
     print("After action update :",belief[1])
@@ -106,7 +111,7 @@ for i in range(NB_TIMESTEPS-1):
     belief = observation_update(belief, obs)
     print("After observation update :",belief[1])
 
-    #print("\n")
+    print("\n")
 
-simulation.step('none')
+simulation.step(('none',1))
 simulation.write_commands()

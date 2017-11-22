@@ -28,10 +28,12 @@ def load_configs():
     lanes_speeds = lane_config["mean_speed_per_lane"]
     lanes_speeds_repeated = np.repeat(lanes_speeds, num_sublanes_per_lane)
     config["sublanes_speeds"] = lanes_speeds_repeated[side_sublanes_crop:-side_sublanes_crop].tolist()
+    config["lanes_speeds"] = lanes_speeds
 
     dt = lane_config["dt"]
     cell_length = pomdp_config["cell_length"]
 
+    config["lanes_speeds_cells"] = [int(round(speed * dt / cell_length)) for speed in config["lanes_speeds"]]
     config["sublanes_speeds_cells"] = [int(round(speed * dt / cell_length)) for speed in config["sublanes_speeds"]]
 
     lane_width = lane_config["lane_width"]

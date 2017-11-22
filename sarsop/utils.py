@@ -42,24 +42,23 @@ def make_y0_transition_matrix(action):
 
     return p
 
-def make_dx_transition_matrix(y0, car):
+def make_dx_transition_matrix(speed_autonomous, car):
 
-    assert y0 >= 0 and y0 < NY
     assert car >= 1 and car < NCARS
 
-    speed = SUBLANES_SPEEDS_CELLS[CARS_SUBLANES[car]] - SUBLANES_SPEEDS_CELLS[y0]
+    diff_speed = SUBLANES_SPEEDS_CELLS[CARS_SUBLANES[car]] - speed_autonomous
     p_trans = TRANSITION_PROBAS[CARS_SUBLANES[car]]
 
     p = np.zeros((NDX,NDX))
 
-    if speed > 0:
-        val = 1.0 / (speed+1)
+    if diff_speed > 0:
+        val = 1.0 / (diff_speed+1)
         p[0,:] = 0 
-        p[0,:speed+1] = val
+        p[0,:diff_speed+1] = val
 
         l = len(p_trans)
         for i in range(1,p.shape[0]):
-            idx = i+speed
+            idx = i+diff_speed
             if idx >= p.shape[1]:
                 m = idx - p.shape[1] + 1
                 p[i,idx-l+1:idx+1] = p_trans[:-m]
@@ -67,14 +66,14 @@ def make_dx_transition_matrix(y0, car):
             else:
                 p[i,idx-l+1:idx+1] = p_trans
 
-    elif speed <= 0:
-        val = 1.0 / (-speed+1)
+    elif diff_speed <= 0:
+        val = 1.0 / (-diff_speed+1)
         p[-1,:] = 0 
-        p[-1,-(-speed+1):] = val
+        p[-1,-(-diff_speed+1):] = val
         
         l = len(p_trans)
         for i in range(0,p.shape[0]-1):
-            idx = i+speed
+            idx = i+diff_speed
             if idx < 0:
                 p[i,0] = 1.0
             elif idx-l+1 < 0:
@@ -84,6 +83,7 @@ def make_dx_transition_matrix(y0, car):
             else:
                 p[i,idx-l+1:idx+1] = p_trans
 
+    print(p)
     return p
 
 def make_dx_obs_matrix():
