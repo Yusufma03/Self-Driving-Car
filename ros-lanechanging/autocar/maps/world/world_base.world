@@ -2,6 +2,7 @@ define gc position
 (
 size [1.800 1.000 1.000]
 origin [0.0 0.0 0.0 0.0]
+localization_origin [0 0 0 0]
 drive "omni"
 localization "gps"
 velocity_bounds [-10000 10000 -10000 10000 -10000 10000 -90 90 ]	

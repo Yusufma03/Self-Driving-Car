@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import rospy 
-from std_msgs.msg import Bool
+from std_msgs.msg import Int32
 from rosgraph_msgs.msg import Clock
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import *
@@ -54,12 +54,12 @@ class SpeedController:
         return np.random.choice(speeds, p=probas)
     
     def start_simu(self, msg):
-        self.simu_running = msg
-        if self.simu_running:
-            print("Starting simulation")
+        self.start_time = msg.data
+        self.simu_running = True
+        print("Starting simulation")
 
     def step(self, msg):
-        if self.simu_running:
+        if self.simu_running and msg.clock.secs >= self.start_time:
 
             self.t_ros += 1
             if self.t_ros == self.config["ros_dt_mult"]:
@@ -97,7 +97,7 @@ if __name__=='__main__':
         print("No playback file detected, simulator will generate commands.")
         controller = SpeedController(None)
 
-    rospy.Subscriber('/start_simu', Bool, controller.start_simu, queue_size=1)
+    rospy.Subscriber('/start_simu', Int32, controller.start_simu, queue_size=1)
     rospy.Subscriber('/clock', Clock, controller.step, queue_size=1)
         
     while not controller.end and not rospy.is_shutdown():

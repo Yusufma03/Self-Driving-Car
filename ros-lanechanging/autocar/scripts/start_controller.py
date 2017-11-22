@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import sys
-from std_msgs.msg import Bool
+from std_msgs.msg import Int32
 import rospy 
 import pygame
 
@@ -8,7 +8,7 @@ pygame.init()
 pygame.display.set_mode((250, 250))
 
 rospy.init_node('start_simu')
-pub = rospy.Publisher('/start_simu', Bool, queue_size=1)
+pub = rospy.Publisher('/start_simu', Int32, queue_size=1)
 started = False
 
 while not rospy.is_shutdown() and not started:
@@ -21,6 +21,7 @@ while not rospy.is_shutdown() and not started:
 
     if(keys[pygame.K_s]):
         started = True
-        pub.publish(True)
+        t = rospy.get_rostime().secs
+        pub.publish(t+1)
         
         
