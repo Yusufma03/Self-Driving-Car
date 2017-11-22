@@ -1,5 +1,6 @@
 from despot import *
 import pickle
+import time
 
 def load_data():
     with open('poses.json', 'r') as fin:
@@ -129,7 +130,7 @@ def main(scenarios, lbd, epsilon):
     with open('cmds.json', 'w') as fout:
         json.dump(dump, fout)
 
-    return despot_tree_size / float(cnt), estimate_reward([robot_start_x, 0], data, dump)
+    return despot_tree_size, cnt, estimate_reward([robot_start_x, 0], data, dump)
 
 def vel2act(vel):
     vx, vy, t = vel
@@ -180,12 +181,17 @@ def estimate_reward(robot_pos, agent_pos, vels):
 if __name__ == '__main__':
     rewards = []
     tree_size = []
+    t = []
     for scenarios in [1, 5, 10, 20, 40, 80]:
-        size, reward = main(scenarios, 10, 0.5)
-        print(size, reward)
+        start = time.time()
+        size, cnt, reward = main(scenarios, 10, 0.5)
+        used = time.time() - start
+        print(size / cnt, reward, used / cnt)
         rewards.append(reward)
-        tree_size.append(size)
+        tree_size.append(size / cnt)
+        t.append(used / cnt)
     
     with open('result.pkl', 'wb') as fout:
         pickle.dump(rewards, fout, pickle.HIGHEST_PROTOCOL)
         pickle.dump(tree_size, fout, pickle.HIGHEST_PROTOCOL)
+        pickle.dump(t, fout, pickle.HIGHEST_PROTOCOL)
