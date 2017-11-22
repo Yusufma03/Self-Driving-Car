@@ -1,4 +1,5 @@
 from despot import *
+import pickle
 
 def load_data():
     with open('poses.json', 'r') as fin:
@@ -57,7 +58,7 @@ def action2vel(action, robot_pos):
             vel_x = 2
     else:
         vel_x = 2
-    if (action == LEFT or action == LEFT_FAST) and y > LEFT_MOST:
+    if (action == LEFT or action == LEFT_FAST) and y > LEFT_MOST+1:
         vel_y = -1
     elif (action == RIGHT or action == RIGHT_FAST) and y < RIGHT_MOST:
         vel_y = +1
@@ -66,9 +67,7 @@ def action2vel(action, robot_pos):
 
     return [vel_x, vel_y]
 
-def load_config():
-    with open('despot_config.json', 'r') as fin:
-        config = json.load(fin)
+def load_config(config):
     global SEARCH_DEPTH
     global GAMMA
     global GOAL
@@ -86,17 +85,28 @@ def load_config():
     TIME_LEN = config['time_len']
     LAMBDA = config['lambda']
     ROAD_LEN = config['road_len']
+
+def change_config(config, scenarios, lbd, epsilon):
+    config['num_of_scenarios'] = scenarios
+    config['lambda'] = lbd
+    config['epsilon'] = epsilon
+    return config
         
 
-if __name__=='__main__':
+def main(scenarios, lbd, epsilon):
     data = load_data()
     index = 0
-    load_config()
+    with open('despot_config.json', 'r') as fin:
+        config = json.load(fin)
+    config = change_config(config,scenarios, lbd, epsilon)
+    load_config(config)
     with open('../ros-lanechanging/autocar/scripts/lane_config.json', 'r') as fin:
         parsed = json.load(fin)
         robot_start_x = parsed['autonomous_car_start_pos']
     robot_pos = [robot_start_x, 0]
     dump = []
+    despot_tree_size = 0
+    cnt = 0
     while robot_pos[0] < ROAD_LEN - 5:
         agent_poses_new = get_agent_poses(data, index)
         if index == 0:
@@ -105,14 +115,77 @@ if __name__=='__main__':
             agent_belief = update_belief(agent_belief, agent_poses_new, agent_poses_old)
 
         despot_tree = build_despot(robot_pos, agent_belief)
+        despot_tree_size += len(despot_tree)
+        cnt += 1
         action = planning(despot_tree)
-        print(action)
+        # print(action)
         vel_x, vel_y = action2vel(action, robot_pos)
         robot_pos = [robot_pos[0] + vel_x, robot_pos[1] + vel_y]
-        print(robot_pos)
+        # print(robot_pos)
         dump.append([vel_x*10, vel_y*10, index / 10.0])
         index += 1
         agent_poses_old = agent_poses_new
     
     with open('cmds.json', 'w') as fout:
         json.dump(dump, fout)
+
+    return despot_tree_size / float(cnt), estimate_reward([robot_start_x, 0], data, dump)
+
+def vel2act(vel):
+    vx, vy, t = vel
+    if vy == 0 and vx == 2:
+        return STAY
+    elif vy == 0 and vx == 4:
+        return STAY_FAST
+    elif vy == -1 and vx == 2:
+        return LEFT
+    elif vy == -1 and vx == 4:
+        return LEFT_FAST
+    elif vy == 1 and vx == 2:
+        return RIGHT
+    else:
+        return RIGHT_FAST
+
+def check_collision(robot, agents):
+    for agent in agents:
+        if robot == agents:
+            return True
+    return False
+
+def estimate_reward(robot_pos, agent_pos, vels):
+    vels_ = np.array(vels) / 10
+    robot = robot_pos
+    total_reward = 0
+    cnt = 0
+    for vel in vels_:
+        action = vel2act(vel)
+        agents = get_agent_poses(agent_pos, cnt)
+        cnt += 1
+        reward = 0
+        if check_collision(robot, agents):
+            reward += -1000
+        if action in [LEFT_FAST, RIGHT_FAST, STAY_FAST]:
+            reward += 5
+        if robot[1] != -3:
+            reward -= 10
+        if robot[1] < LEFT_MOST:
+            reward += -100
+        if robot[1] > RIGHT_MOST:
+            reward += -100
+        total_reward += reward
+        robot[0] += vel[0]
+        robot[1] += vel[1]
+    return total_reward
+
+if __name__ == '__main__':
+    rewards = []
+    tree_size = []
+    for scenarios in [1, 5, 10, 20, 40, 80]:
+        size, reward = main(scenarios, 10, 0.5)
+        print(size, reward)
+        rewards.append(reward)
+        tree_size.append(size)
+    
+    with open('result.pkl', 'wb') as fout:
+        pickle.dump(rewards, fout, pickle.HIGHEST_PROTOCOL)
+        pickle.dump(tree_size, fout, pickle.HIGHEST_PROTOCOL)

@@ -107,7 +107,7 @@ class RobotCar(object):
         # else:
         #     vel_x = 2
 
-        if (action == LEFT or action == LEFT_FAST) and self.y > LEFT_MOST:
+        if (action == LEFT or action == LEFT_FAST) and self.y > LEFT_MOST+1:
             vel_y = -1
         elif (action == RIGHT or action == RIGHT_FAST) and self.y < RIGHT_MOST:
             vel_y = +1
@@ -177,8 +177,8 @@ class Scenario(object):
         reward = 0
         if collision:
             reward += -1000
-        if new_robot.x >= GOAL:
-            reward += 50
+        # if new_robot.x >= GOAL:
+        #     reward += 50
         if action in [LEFT_FAST, STAY_FAST, RIGHT_FAST]:
             reward += 5
         if new_robot.y != -3:
@@ -186,25 +186,7 @@ class Scenario(object):
         if new_robot.y < LEFT_MOST:
             reward += -100
         if new_robot.y > RIGHT_MOST:
-            reward += -100
-        
-        # elif action == LEFT or action == LEFT_FAST:
-        #     if new_robot.y != -3:
-        #         reward = -10
-        #     else:
-        #         reward = 50
-        #     if new_robot.y < -4:
-        #         reward = -100
-        #         new_robot.y = -4
-        # elif action == RIGHT or action == RIGHT_FAST:
-        #     if new_robot.y == -3:
-        #         reward = 5
-        #     else:
-        #         reward = -5
-        # else:
-        #     reward = -5
-
-        
+            reward += -100    
 
         return reward
 
