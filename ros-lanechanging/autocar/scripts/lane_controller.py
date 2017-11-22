@@ -25,6 +25,7 @@ class SpeedController:
             self.playback = False
 
         self.t_i = 0
+        self.t_ros = 0
         self.end = False
         self.simu_running = False
 
@@ -37,11 +38,6 @@ class SpeedController:
                 key = 'robot_' + str(robot_id + 1)
                 self.robots.append({"lane":i, "key":key, "pub":rospy.Publisher(key + '/cmd_vel', Twist, queue_size=1)})
                 robot_id += 1
-
-    def update_vel(self, i):
-        mean_vel = self.config["mean_speed_per_lane"][i]
-        stdrr_vel = self.config["stdrr_speed_per_lane"][i]
-        return np.random.normal(mean_vel, stdrr_vel)
 
     def update_vel(self, robot):
 
@@ -64,17 +60,23 @@ class SpeedController:
 
     def step(self, msg):
         if self.simu_running:
-            # publish the speed for each robot
-            for robot in self.robots:
-                vel = self.update_vel(robot["key"])
-                self.send_control(robot["pub"], vel)
-            self.t_i += 1
 
-            if self.t_i == self.config["nb_timesteps"]:
-                self.end = True
-                self.simu_running = False
+            self.t_ros += 1
+            if self.t_ros == self.config["ros_dt_mult"]:
+                self.t_ros = 0
+
+                # publish the speed for each robot
                 for robot in self.robots:
-                    self.send_control(robot["pub"], 0.0)
+                    vel = self.update_vel(robot["key"])
+                    self.send_control(robot["pub"], vel)
+                self.t_i += 1
+
+                if self.t_i == self.config["nb_timesteps"]:
+                    self.end = True
+                    self.simu_running = False
+                    for robot in self.robots:
+                        self.send_control(robot["pub"], 0.0)
+            
             
     def send_control(self, robot_pub, vel):
         msg = Twist()

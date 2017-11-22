@@ -19,6 +19,7 @@ class PlaybackController:
         self.pub = rospy.Publisher('robot_0/cmd_vel', Twist, queue_size=1)
         self.simu_running = False
         self.t_i = 0
+        self.t_ros = 0
         self.end = False
         np.random.seed(self.config["random_seed"])
         
@@ -35,13 +36,18 @@ class PlaybackController:
             
     def step(self, msg):
         if self.simu_running:
-            cmd = self.cmds[self.t_i]
-            self.send_control(cmd)
-            self.t_i += 1
-            if self.t_i == len(self.cmds):
-                self.simu_running = False
-                self.end = True
-                self.send_control([0.0, 0.0])
+
+            self.t_ros += 1
+            if self.t_ros == self.config["ros_dt_mult"]:
+                self.t_ros = 0
+
+                cmd = self.cmds[self.t_i]
+                self.send_control(cmd)
+                self.t_i += 1
+                if self.t_i == len(self.cmds):
+                    self.simu_running = False
+                    self.end = True
+                    self.send_control([0.0, 0.0])
         
     
 

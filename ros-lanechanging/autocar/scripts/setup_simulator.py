@@ -25,7 +25,8 @@ print("1 autonomous car + %d other cars." % (count-1))
 # --------- Generating .world file ------------------------
 
 with open('../maps/world/world_base.world', 'r') as f:
-    world_base = f.read()
+    dt_ros_ms =  int(round(1000 * config["dt"] / config["ros_dt_mult"]))
+    world_base = f.read() % (dt_ros_ms, dt_ros_ms)
 
 with open('../maps/world/_active_world.world', 'w') as f:
     f.write(world_base + '\n')

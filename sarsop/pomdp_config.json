@@ -1,7 +1,7 @@
 {
     "num_sublanes_per_lane":3,
     "num_cells_obs":5,
-    "discount":0.95,
+    "discount":0.80,
     "obs_probas":[0.2, 0.6, 0.2],
     "cell_length":2.0,
     "rewards":
