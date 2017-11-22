@@ -213,7 +213,7 @@ for i in range(1, NCARS):
     half = int(NUM_SUBLANES_PER_LANE/2)
     i1 = max(0, sublane-half)
     i2 = min(NY, sublane+half+1)
-    v[sublane, i1:i2] = REWARDS["collision"]
+    v[i1:i2, int(NDX/2)] = REWARDS["collision"]
 
     make_reward("rew_collision%d" % i, ["y0_1", "dx%d_1" % i], table_to_str(v, mode='int'))
 
