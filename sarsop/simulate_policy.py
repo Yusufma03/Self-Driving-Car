@@ -52,8 +52,10 @@ def get_optimal_action(belief, vectors, actions_vectors):
     ind = np.argmax(vals)
     action_id = actions_vectors[ind]
 
-    lateral_action_id = action_id // 2
-    speed_action_id = action_id % 2
+    nb_speeds = len(LANES_SPEEDS_CELLS)
+
+    lateral_action_id = action_id // nb_speeds
+    speed_action_id = action_id % nb_speeds
 
     return ["none", "left", "right"][lateral_action_id],speed_action_id
 

@@ -22,7 +22,7 @@ def table_to_str(table, mode='float'):
     for i in range(table.shape[0]):
         for j in range(table.shape[1]):
             if mode == 'float':
-                s += "%.1f" % table[i,j]
+                s += "%.3f" % table[i,j]
             else:
                 s += "%d" % table[i,j]
             if i != table.shape[0]-1 or j != table.shape[1]-1:
