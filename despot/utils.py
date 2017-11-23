@@ -16,7 +16,7 @@ RIGHT_FAST = 5
 GOAL = 160
 BOUNDARY = -1
 EPSILON = 0.5
-NUM_OF_SCENARIOS = 20
+NUM_OF_SCENARIOS = 60
 TIME_LEN = 1
 LEFT_MOST = -4
 RIGHT_MOST = 1
@@ -55,7 +55,7 @@ class AgentCar(object):
         rand = (self.bias + rand_num) / 2
         if self.y < BOUNDARY:
             vel_x = 4
-            if rand < 0.2:
+            if rand < 0.4:
                 vel_x = 2
         else:
             vel_x = 2
@@ -73,7 +73,7 @@ class AgentCar(object):
         random = np.random.random()
         if self.y < BOUNDARY:
             vel_x = 4
-            if random < 0.2:
+            if random < 0.4:
                 vel_x = 2
         else:
             vel_x = 2
@@ -127,7 +127,7 @@ class RobotCar(object):
 
     def collide(self, poses):
         for pos in poses:
-            if [self.x, self.y] == pos:
+            if pos[1] == self.y and abs(pos[0] - self.x) <= 2:
                 return True
         return False
 
@@ -146,12 +146,12 @@ class Scenario(object):
         self.robot = robot
         self.agents = agents
 
-    def collide(self):
-        poses = [
-            [car.x, car.y]
-            for car in self.agents
-        ]
-        return self.robot.collide(poses)
+    # def collide(self):
+    #     poses = [
+    #         [car.x, car.y]
+    #         for car in self.agents
+    #     ]
+    #     return self.robot.collide(poses)
 
     def step(self, action):
         new_robot = self.robot.step(action)
@@ -269,7 +269,7 @@ class Node(object):
 
     def get_average_reward(self, action):
         rewards = [scenario.get_reward(action) for scenario in self.scenarios]
-        return 1.0/NUM_OF_SCENARIOS * np.sum(rewards) * GAMMA ** self.depth - LAMBDA
+        return 1.0 * np.sum(rewards) * GAMMA ** self.depth - LAMBDA
 
     def get_upper_action(self):
         return np.argmin(self.uppers)

@@ -1,0 +1,1 @@
+{"nb_timesteps": 300, "dt": 0.1, "ros_dt_mult": 5, "num_lanes": 2, "lane_width": 3.0, "num_cars_per_lane": 0, "car_start_poses": [[], [26, 0, 10, 28]], "autonomous_car_start_pos": 15, "mean_speed_per_lane": [20, 40], "stdrr_speed_per_lane": [0, 0], "transition_probas": [[1.0], [0.4, 0.6]], "random_seed": 123}

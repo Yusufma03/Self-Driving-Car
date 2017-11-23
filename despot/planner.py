@@ -115,14 +115,14 @@ def main(scenarios, lbd, epsilon):
         else:
             agent_belief = update_belief(agent_belief, agent_poses_new, agent_poses_old)
 
-        despot_tree = build_despot(robot_pos, agent_belief)
+        despot_tree = build_despot(robot_pos, agent_belief, NUM_OF_SCENARIOS)
         despot_tree_size += len(despot_tree)
         cnt += 1
-        action = planning(despot_tree)
-        # print(action)
+        action = planning(despot_tree, NUM_OF_SCENARIOS)
+        print(action)
         vel_x, vel_y = action2vel(action, robot_pos)
         robot_pos = [robot_pos[0] + vel_x, robot_pos[1] + vel_y]
-        # print(robot_pos)
+        print(robot_pos)
         dump.append([vel_x*10, vel_y*10, index / 10.0])
         index += 1
         agent_poses_old = agent_poses_new
@@ -149,7 +149,7 @@ def vel2act(vel):
 
 def check_collision(robot, agents):
     for agent in agents:
-        if robot == agents:
+        if robot[1] == agent[1] and abs(robot[0] - agent[0]) <= 2:
             return True
     return False
 
@@ -195,3 +195,9 @@ if __name__ == '__main__':
         pickle.dump(rewards, fout, pickle.HIGHEST_PROTOCOL)
         pickle.dump(tree_size, fout, pickle.HIGHEST_PROTOCOL)
         pickle.dump(t, fout, pickle.HIGHEST_PROTOCOL)
+
+# if __name__ == '__main__':
+#     start = time.time()
+#     size, cnt, reward = main(40, 10, 0.5)
+#     used = time.time() - start
+#     print(size / cnt, reward, used / cnt)

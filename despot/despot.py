@@ -1,10 +1,9 @@
 from utils import *
 
-def build_despot(robot_pos, agent_belief):
+def build_despot(robot_pos, agent_belief, num_of_scenarios):
     nodes_array = []
     root = Node(None, 0, 0)
-
-    for _ in range(NUM_OF_SCENARIOS):
+    for _ in range(num_of_scenarios):
         rand_nums = np.random.random(size=SEARCH_DEPTH+1)
         scenario = Scenario(SEARCH_DEPTH, rand_nums)
         robot = RobotCar(robot_pos)
@@ -81,13 +80,13 @@ def back_up(nodes_array, history):
         back_up_node(nodes_array, node_id)
 
 
-def planning(nodes_array):
+def planning(nodes_array, num_of_scenarios):
     root = nodes_array[0]
     q_values = []
     for action in range(NUM_OF_ACTIONS):
-        reward = root.get_average_reward(action)
+        reward = root.get_average_reward(action) / num_of_scenarios
         value = np.sum([
-            regularized_value(child, nodes_array)
+            regularized_value(child, nodes_array, num_of_scenarios)
             for _, child in root.children[action].items()
         ])
         q_values.append(reward + value)
@@ -95,7 +94,7 @@ def planning(nodes_array):
     return np.argmax(q_values)
 
 
-def regularized_value(node_id, nodes_array):
+def regularized_value(node_id, nodes_array, num_of_scenarios):
     '''
     assume the default policy is staying in the current lane, hence default value is 0
     '''
@@ -106,9 +105,9 @@ def regularized_value(node_id, nodes_array):
 
     v2s = []
     for action in range(NUM_OF_ACTIONS):
-        v2_t = node.get_average_reward(action)
+        v2_t = node.get_average_reward(action) / num_of_scenarios
         v2_t += np.sum([
-            regularized_value(child, nodes_array)
+            regularized_value(child, nodes_array, num_of_scenarios)
             for _, child in node.children[action].items()
         ])
         v2s.append(v2_t)
