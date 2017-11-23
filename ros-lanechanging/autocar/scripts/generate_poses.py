@@ -34,7 +34,7 @@ for i in range(config["num_lanes"]):
         key = 'robot_' + str(count)
         x = config["car_start_poses"][i][j]
         poses[key] = [[x, y_lane, 0]]
-        vels[key] = [float(update_vel(i, config))]
+        vels[key] = [0.0]
         lane_ids[key] = i
         count += 1
 
