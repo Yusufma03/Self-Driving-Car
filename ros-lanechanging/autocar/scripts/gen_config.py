@@ -36,7 +36,7 @@ def gen_config(file_name):
     loc = [locs_1, locs_2]
     auto_pos = random.randint(5, 15)
 
-    config['num_cars_per_lane'] = CAR_NUM[car_num][0]
+    config['num_cars_per_lane'] = CAR_NUM[car_num]
     config['car_start_poses'] = loc
     config['autonomous_car_start_pos'] = int(auto_pos)
     with open(folder_path + file_name + '.json', 'w') as fout:
