@@ -255,7 +255,7 @@ class Node(object):
             for action in range(NUM_OF_ACTIONS):
                 if action == LEFT or LEFT_FAST:
                     uppers.append(50)
-                    lowers.append(-1000)
+                    lowers.append(-10000)
                 elif action == STAY or STAY_FAST:
                     uppers.append(50)
                     lowers.append(-5)

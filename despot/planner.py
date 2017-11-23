@@ -108,7 +108,8 @@ def main(scenarios, lbd, epsilon):
     dump = []
     despot_tree_size = 0
     cnt = 0
-    while robot_pos[0] < ROAD_LEN - 5:
+    data_len = len(data['robot_1'])
+    while index < data_len and robot_pos[0] < GOAL-5:
         agent_poses_new = get_agent_poses(data, index)
         if index == 0:
             agent_belief = to_belief(agent_poses_new)
@@ -164,7 +165,7 @@ def estimate_reward(robot_pos, agent_pos, vels):
         cnt += 1
         reward = 0
         if check_collision(robot, agents):
-            reward += -1000
+            reward += -10000
         if action in [LEFT_FAST, RIGHT_FAST, STAY_FAST]:
             reward += 5
         if robot[1] != -3:
@@ -178,26 +179,43 @@ def estimate_reward(robot_pos, agent_pos, vels):
         robot[1] += vel[1]
     return total_reward
 
-if __name__ == '__main__':
-    rewards = []
-    tree_size = []
-    t = []
-    for scenarios in [1, 5, 10, 20, 40, 80]:
-        start = time.time()
-        size, cnt, reward = main(scenarios, 10, 0.5)
-        used = time.time() - start
-        print(size / cnt, reward, used / cnt)
-        rewards.append(reward)
-        tree_size.append(size / cnt)
-        t.append(used / cnt)
-    
-    with open('result.pkl', 'wb') as fout:
-        pickle.dump(rewards, fout, pickle.HIGHEST_PROTOCOL)
-        pickle.dump(tree_size, fout, pickle.HIGHEST_PROTOCOL)
-        pickle.dump(t, fout, pickle.HIGHEST_PROTOCOL)
-
 # if __name__ == '__main__':
-#     start = time.time()
-#     size, cnt, reward = main(40, 10, 0.5)
-#     used = time.time() - start
-#     print(size / cnt, reward, used / cnt)
+#     rewards = []
+#     tree_size = []
+#     t = []
+#     for scenarios in [5, 10, 20, 40, 80]:
+#         # size_s = []
+#         # cnt_s = []
+#         # reward_s = []
+#         # time_s = []
+#         # size, cnt, reward = main(scenarios, 10, 0.5)
+#         # for _ in range(5):
+#         #     start = time.time()
+#         #     size_t, cnt_t, reward_t = main(scenarios, 10, 0.5)
+#         #     used = time.time() - start
+#         #     size_s.append(size_t / cnt_t)
+#         #     cnt_s.append(cnt_t)
+#         #     reward_s.append(reward_t)
+#         #     time_s.append(used / cnt_t)
+#         # size, cnt, reward = sum(size_s) / len(size_s), sum(cnt_s) / len(cnt_s), sum(reward_s) / len(reward_s)
+#         # t_used = sum(time_s) / len(time_s)
+#         start = time.time()
+#         size, cnt, reward = main(scenarios, 10, 0.5)
+#         t_used = time.time() - start
+#         print(size, reward, t_used)
+#         rewards.append(reward)
+#         tree_size.append(size / cnt)
+#         t.append(t_used)
+
+#     import pdb; pdb.set_trace()
+    
+#     with open('result.pkl', 'wb') as fout:
+#         pickle.dump(rewards, fout, pickle.HIGHEST_PROTOCOL)
+#         pickle.dump(tree_size, fout, pickle.HIGHEST_PROTOCOL)
+#         pickle.dump(t, fout, pickle.HIGHEST_PROTOCOL)
+
+if __name__ == '__main__':
+    start = time.time()
+    size, cnt, reward = main(40, 10, 0.5)
+    used = time.time() - start
+    print(size / cnt, reward, used)
